@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Schemes from "./pages/Schemes";
 import SchemeDetail from "./pages/SchemeDetail";
 import Learn from "./pages/Learn";
+import CourseDetail from "./pages/CourseDetail";
 import Community from "./pages/Community";
 import Blogs from "./pages/Blogs";
 import Auth from "./pages/Auth";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/schemes" element={<Schemes />} />
             <Route path="/schemes/:schemeId" element={<SchemeDetail />} />
             <Route path="/learn" element={<Learn />} />
+            <Route path="/courses/:courseId" element={<CourseDetail />} />
             <Route path="/community" element={<Community />} />
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/auth" element={<Auth />} />
