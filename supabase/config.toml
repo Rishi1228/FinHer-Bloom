@@ -1,1 +1,7 @@
 project_id = "hsifmlbicjuyihpihgxp"
+
+[functions.verify-documents]
+verify_jwt = false
+
+[functions.scheme-chatbot]
+verify_jwt = false
