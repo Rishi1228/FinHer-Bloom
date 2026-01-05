@@ -1,13 +1,15 @@
 import { motion } from "framer-motion";
-import { MessageCircle, Users, Heart, Star, Calendar, ChevronRight, Send } from "lucide-react";
+import { MessageCircle, Users, Heart, Star, Calendar, ChevronRight, Send, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Link } from "react-router-dom";
+import { useState } from "react";
 
 const discussions = [
   {
-    id: 1,
+    id: "1",
     title: "Best savings schemes for new mothers?",
     author: "Meera S.",
     avatar: "M",
@@ -17,7 +19,7 @@ const discussions = [
     category: "Schemes",
   },
   {
-    id: 2,
+    id: "2",
     title: "How I saved ₹5 lakh in 2 years - My Journey",
     author: "Priya K.",
     avatar: "P",
@@ -27,7 +29,7 @@ const discussions = [
     category: "Success Stories",
   },
   {
-    id: 3,
+    id: "3",
     title: "Mudra Yojana application tips for first-timers",
     author: "Anita D.",
     avatar: "A",
@@ -37,7 +39,7 @@ const discussions = [
     category: "Entrepreneurship",
   },
   {
-    id: 4,
+    id: "4",
     title: "Investment advice for single mothers",
     author: "Fatima R.",
     avatar: "F",
@@ -46,24 +48,76 @@ const discussions = [
     time: "2 days ago",
     category: "Investing",
   },
+  {
+    id: "5",
+    title: "PPF vs FD - Which is better for long term?",
+    author: "Sunita M.",
+    avatar: "S",
+    replies: 42,
+    likes: 98,
+    time: "3 days ago",
+    category: "Investing",
+  },
+  {
+    id: "6",
+    title: "How to start investing with ₹500?",
+    author: "Kavita R.",
+    avatar: "K",
+    replies: 67,
+    likes: 156,
+    time: "4 days ago",
+    category: "Investing",
+  },
 ];
 
 const upcomingEvents = [
   {
+    id: 1,
     title: "Live Q&A: Tax Planning",
     date: "Jan 10, 2025",
     time: "6:00 PM",
     host: "CA Sunita Sharma",
+    attendees: 234,
   },
   {
+    id: 2,
     title: "Webinar: Starting Your Business",
     date: "Jan 15, 2025",
     time: "7:00 PM",
     host: "Entrepreneur Neha Gupta",
+    attendees: 189,
+  },
+  {
+    id: 3,
+    title: "Workshop: Budgeting Basics",
+    date: "Jan 20, 2025",
+    time: "5:00 PM",
+    host: "Finance Coach Priya",
+    attendees: 156,
   },
 ];
 
+const categories = ["All", "Schemes", "Success Stories", "Entrepreneurship", "Investing"];
+
 const Community = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [newPost, setNewPost] = useState("");
+
+  const filteredDiscussions = discussions.filter((discussion) => {
+    const matchesSearch = discussion.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || discussion.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const handlePost = () => {
+    if (newPost.trim()) {
+      // In a real app, this would submit to the database
+      alert("Post submitted! In a real app, this would be saved to the database.");
+      setNewPost("");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -89,8 +143,10 @@ const Community = () => {
               <Input
                 placeholder="Ask a question or share your experience..."
                 className="rounded-xl py-6"
+                value={newPost}
+                onChange={(e) => setNewPost(e.target.value)}
               />
-              <Button className="btn-primary-glow px-6">
+              <Button className="btn-primary-glow px-6" onClick={handlePost}>
                 <Send className="w-4 h-4" />
               </Button>
             </div>
@@ -133,6 +189,36 @@ const Community = () => {
         </div>
       </section>
 
+      {/* Search & Filter */}
+      <section className="py-6 border-b border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search discussions..."
+                className="pl-10 rounded-xl"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className={`rounded-full ${selectedCategory === category ? "btn-primary-glow" : ""}`}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Main Content */}
       <section className="py-16">
         <div className="container mx-auto px-4">
@@ -140,49 +226,61 @@ const Community = () => {
             {/* Discussions */}
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-serif text-2xl font-bold">Trending Discussions</h2>
-                <Button variant="ghost" className="gap-2">
-                  View All <ChevronRight className="w-4 h-4" />
-                </Button>
+                <h2 className="font-serif text-2xl font-bold">
+                  {selectedCategory === "All" ? "Trending Discussions" : selectedCategory}
+                </h2>
+                <span className="text-sm text-muted-foreground">
+                  {filteredDiscussions.length} discussions
+                </span>
               </div>
 
-              <div className="space-y-4">
-                {discussions.map((discussion, index) => (
-                  <motion.div
-                    key={discussion.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="glass-card-hover p-5"
-                  >
-                    <div className="flex gap-4">
-                      <div className="w-10 h-10 rounded-full gradient-hero flex items-center justify-center text-white font-serif font-bold flex-shrink-0">
-                        {discussion.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="badge-lavender text-xs">{discussion.category}</span>
-                          <span className="text-xs text-muted-foreground">{discussion.time}</span>
+              {filteredDiscussions.length === 0 ? (
+                <div className="text-center py-12">
+                  <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No discussions found. Try a different search.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredDiscussions.map((discussion, index) => (
+                    <motion.div
+                      key={discussion.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Link to={`/community/${discussion.id}`}>
+                        <div className="glass-card-hover p-5 cursor-pointer">
+                          <div className="flex gap-4">
+                            <div className="w-10 h-10 rounded-full gradient-hero flex items-center justify-center text-white font-serif font-bold flex-shrink-0">
+                              {discussion.avatar}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="badge-lavender text-xs">{discussion.category}</span>
+                                <span className="text-xs text-muted-foreground">{discussion.time}</span>
+                              </div>
+                              <h3 className="font-semibold mb-1 hover:text-primary transition-colors">
+                                {discussion.title}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">by {discussion.author}</p>
+                              <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <MessageCircle className="w-4 h-4" />
+                                  {discussion.replies} replies
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Heart className="w-4 h-4" />
+                                  {discussion.likes} likes
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <h3 className="font-semibold mb-1 hover:text-primary cursor-pointer transition-colors">
-                          {discussion.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">by {discussion.author}</p>
-                        <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <MessageCircle className="w-4 h-4" />
-                            {discussion.replies} replies
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Heart className="w-4 h-4" />
-                            {discussion.likes} likes
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}
@@ -194,13 +292,19 @@ const Community = () => {
                   <h3 className="font-serif text-lg font-semibold">Upcoming Events</h3>
                 </div>
                 <div className="space-y-4">
-                  {upcomingEvents.map((event, index) => (
-                    <div key={index} className="border-b border-border last:border-0 pb-4 last:pb-0">
+                  {upcomingEvents.map((event) => (
+                    <div key={event.id} className="border-b border-border last:border-0 pb-4 last:pb-0">
                       <p className="font-medium mb-1">{event.title}</p>
                       <p className="text-sm text-muted-foreground mb-1">
                         {event.date} at {event.time}
                       </p>
-                      <p className="text-xs text-muted-foreground">Hosted by {event.host}</p>
+                      <p className="text-xs text-muted-foreground mb-2">Hosted by {event.host}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">{event.attendees} attending</span>
+                        <Button variant="outline" size="sm" className="h-7 text-xs rounded-full">
+                          Join
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -216,19 +320,48 @@ const Community = () => {
                   <h3 className="font-serif text-lg font-semibold">Top Contributors</h3>
                 </div>
                 <div className="space-y-3">
-                  {["Sunita M.", "Kavita R.", "Nisha P."].map((name, index) => (
-                    <div key={name} className="flex items-center gap-3">
+                  {[
+                    { name: "Sunita M.", answers: 234 },
+                    { name: "Kavita R.", answers: 189 },
+                    { name: "Nisha P.", answers: 156 },
+                    { name: "Priya K.", answers: 134 },
+                    { name: "Meera S.", answers: 112 },
+                  ].map((contributor, index) => (
+                    <div key={contributor.name} className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full gradient-hero flex items-center justify-center text-white text-sm font-bold">
-                        {name.charAt(0)}
+                        {contributor.name.charAt(0)}
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{name}</p>
-                        <p className="text-xs text-muted-foreground">{234 - index * 50} helpful answers</p>
+                        <p className="text-sm font-medium">{contributor.name}</p>
+                        <p className="text-xs text-muted-foreground">{contributor.answers} helpful answers</p>
                       </div>
                       <div className="badge-gold text-xs">#{index + 1}</div>
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Community Guidelines */}
+              <div className="glass-card p-6">
+                <h3 className="font-serif text-lg font-semibold mb-3">Community Guidelines</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    Be respectful and supportive
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    Share genuine experiences
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    No spam or self-promotion
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary">•</span>
+                    Protect privacy - yours and others'
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
