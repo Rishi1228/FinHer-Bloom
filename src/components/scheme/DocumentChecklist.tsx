@@ -1,17 +1,36 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { FileCheck, FileX, CheckCircle2, AlertCircle, Upload, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FileCheck, FileX, CheckCircle2, AlertCircle, Upload, Sparkles, Loader2, XCircle, AlertTriangle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { SchemeDetails } from "@/data/schemes";
 
 interface DocumentChecklistProps {
   scheme: SchemeDetails;
 }
 
+interface VerificationResult {
+  overallStatus: "ready" | "partial" | "not_ready";
+  readinessScore: number;
+  summary: string;
+  documentChecks: {
+    documentName: string;
+    status: "verified" | "missing" | "needs_review";
+    message: string;
+  }[];
+  missingDocuments: string[];
+  tips: string[];
+  warnings: string[];
+}
+
 const DocumentChecklist = ({ scheme }: DocumentChecklistProps) => {
   const [checkedDocs, setCheckedDocs] = useState<Record<string, boolean>>({});
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const { toast } = useToast();
 
   const requiredDocs = scheme.documents.filter(d => d.required);
   const optionalDocs = scheme.documents.filter(d => !d.required);
@@ -23,6 +42,89 @@ const DocumentChecklist = ({ scheme }: DocumentChecklistProps) => {
 
   const toggleDoc = (docName: string) => {
     setCheckedDocs(prev => ({ ...prev, [docName]: !prev[docName] }));
+    setVerificationResult(null); // Reset verification when documents change
+  };
+
+  const verifyDocuments = async () => {
+    const checkedDocNames = Object.entries(checkedDocs)
+      .filter(([_, checked]) => checked)
+      .map(([name]) => name);
+
+    if (checkedDocNames.length === 0) {
+      toast({
+        title: "No documents selected",
+        description: "Please select at least one document to verify.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsVerifying(true);
+    setVerificationResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-documents', {
+        body: {
+          documents: checkedDocNames,
+          schemeName: scheme.name,
+          schemeRequirements: scheme.documents.map(d => ({
+            name: d.name,
+            required: d.required,
+            description: d.description
+          }))
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setVerificationResult(data);
+      
+      toast({
+        title: "Verification Complete",
+        description: data.summary,
+      });
+    } catch (error) {
+      console.error("Verification error:", error);
+      toast({
+        title: "Verification Failed",
+        description: error instanceof Error ? error.message : "Failed to verify documents. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "verified":
+        return <CheckCircle2 className="w-4 h-4 text-teal" />;
+      case "missing":
+        return <XCircle className="w-4 h-4 text-destructive" />;
+      case "needs_review":
+        return <AlertTriangle className="w-4 h-4 text-amber-500" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "ready":
+        return "bg-teal/20 border-teal/30 text-teal";
+      case "partial":
+        return "bg-amber-100 border-amber-200 text-amber-800";
+      case "not_ready":
+        return "bg-destructive/10 border-destructive/30 text-destructive";
+      default:
+        return "bg-muted border-border";
+    }
   };
 
   return (
@@ -120,7 +222,7 @@ const DocumentChecklist = ({ scheme }: DocumentChecklistProps) => {
 
       {/* Optional Documents */}
       {optionalDocs.length > 0 && (
-        <div>
+        <div className="mb-6">
           <h4 className="font-medium text-sm text-muted-foreground mb-3 uppercase tracking-wide">
             Optional Documents
           </h4>
@@ -163,23 +265,126 @@ const DocumentChecklist = ({ scheme }: DocumentChecklistProps) => {
         </div>
       )}
 
-      {/* AI Verification CTA */}
-      <div className="mt-6 p-4 rounded-xl gradient-warm">
-        <div className="flex items-center justify-between">
+      {/* AI Verification Button */}
+      <div className="p-4 rounded-xl gradient-warm">
+        <div className="flex items-center justify-between mb-3">
           <div>
             <h4 className="font-medium flex items-center gap-2">
-              <Upload className="w-4 h-4" />
+              <Sparkles className="w-4 h-4 text-primary" />
               AI Document Verification
             </h4>
             <p className="text-sm text-muted-foreground">
-              Upload documents to check completeness and format
+              Get instant AI-powered verification of your documents
             </p>
           </div>
-          <Button variant="outline" className="rounded-xl">
-            Coming Soon
-          </Button>
         </div>
+        <Button 
+          onClick={verifyDocuments}
+          disabled={isVerifying || checkedCount === 0}
+          className="w-full btn-primary-glow rounded-xl gap-2"
+        >
+          {isVerifying ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Analyzing Documents...
+            </>
+          ) : (
+            <>
+              <Upload className="w-4 h-4" />
+              Verify My Documents
+            </>
+          )}
+        </Button>
       </div>
+
+      {/* Verification Results */}
+      <AnimatePresence>
+        {verificationResult && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-6 space-y-4"
+          >
+            {/* Overall Status */}
+            <div className={`p-4 rounded-xl border ${getStatusColor(verificationResult.overallStatus)}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  {verificationResult.overallStatus === "ready" && <CheckCircle2 className="w-5 h-5" />}
+                  {verificationResult.overallStatus === "partial" && <AlertTriangle className="w-5 h-5" />}
+                  {verificationResult.overallStatus === "not_ready" && <XCircle className="w-5 h-5" />}
+                  <span className="font-semibold capitalize">
+                    {verificationResult.overallStatus === "ready" && "Ready to Apply!"}
+                    {verificationResult.overallStatus === "partial" && "Almost Ready"}
+                    {verificationResult.overallStatus === "not_ready" && "More Documents Needed"}
+                  </span>
+                </div>
+                <span className="text-2xl font-bold">{verificationResult.readinessScore}%</span>
+              </div>
+              <p className="text-sm">{verificationResult.summary}</p>
+            </div>
+
+            {/* Document Checks */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Document Status</h4>
+              {verificationResult.documentChecks.map((check, index) => (
+                <div key={index} className="flex items-start gap-2 p-2 rounded-lg bg-muted/30">
+                  {getStatusIcon(check.status)}
+                  <div className="flex-1">
+                    <span className="font-medium text-sm">{check.documentName}</span>
+                    <p className="text-xs text-muted-foreground">{check.message}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Missing Documents */}
+            {verificationResult.missingDocuments.length > 0 && (
+              <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20">
+                <h4 className="font-medium text-sm text-destructive mb-2 flex items-center gap-2">
+                  <XCircle className="w-4 h-4" />
+                  Missing Documents
+                </h4>
+                <ul className="list-disc list-inside text-sm text-destructive/80 space-y-1">
+                  {verificationResult.missingDocuments.map((doc, index) => (
+                    <li key={index}>{doc}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Tips */}
+            {verificationResult.tips.length > 0 && (
+              <div className="p-3 rounded-xl bg-teal/10 border border-teal/20">
+                <h4 className="font-medium text-sm text-teal mb-2 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Helpful Tips
+                </h4>
+                <ul className="list-disc list-inside text-sm text-teal-foreground space-y-1">
+                  {verificationResult.tips.map((tip, index) => (
+                    <li key={index}>{tip}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Warnings */}
+            {verificationResult.warnings.length > 0 && (
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                <h4 className="font-medium text-sm text-amber-800 mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  Important Notes
+                </h4>
+                <ul className="list-disc list-inside text-sm text-amber-700 space-y-1">
+                  {verificationResult.warnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
