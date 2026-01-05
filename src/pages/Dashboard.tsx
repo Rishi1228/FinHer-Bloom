@@ -132,61 +132,61 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-28 pb-16">
-        <div className="container mx-auto px-4 md:px-8">
+      <main className="pt-20 sm:pt-28 pb-12 sm:pb-16">
+        <div className="container mx-auto px-3 sm:px-4 md:px-8">
           {/* Welcome Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-6 md:mb-8"
           >
-            <h1 className="font-serif text-3xl md:text-4xl font-bold mb-2">
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold mb-1 md:mb-2">
               Welcome back, {user.user_metadata?.full_name || "there"}! 👋
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm md:text-base text-muted-foreground">
               Track your scheme applications and access your saved conversations.
             </p>
           </motion.div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 md:mb-8">
             <Card className="glass-card">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <FileCheck className="w-6 h-6 text-primary" />
+              <CardContent className="p-3 sm:pt-6 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-center sm:gap-4 text-center sm:text-left">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2 sm:mb-0">
+                    <FileCheck className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{applications.length}</p>
-                    <p className="text-sm text-muted-foreground">Tracked Schemes</p>
+                    <p className="text-xl sm:text-2xl font-bold">{applications.length}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Tracked</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             <Card className="glass-card">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
-                    <MessageSquare className="w-6 h-6 text-secondary-foreground" />
+              <CardContent className="p-3 sm:pt-6 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-center sm:gap-4 text-center sm:text-left">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-secondary flex items-center justify-center mb-2 sm:mb-0">
+                    <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-secondary-foreground" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{conversations.length}</p>
-                    <p className="text-sm text-muted-foreground">Conversations</p>
+                    <p className="text-xl sm:text-2xl font-bold">{conversations.length}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Chats</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             <Card className="glass-card">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-accent-foreground" />
+              <CardContent className="p-3 sm:pt-6 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-center sm:gap-4 text-center sm:text-left">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent flex items-center justify-center mb-2 sm:mb-0">
+                    <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-accent-foreground" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">
+                    <p className="text-xl sm:text-2xl font-bold">
                       {applications.filter((a) => a.status === "approved").length}
                     </p>
-                    <p className="text-sm text-muted-foreground">Approved</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Approved</p>
                   </div>
                 </div>
               </CardContent>
@@ -232,41 +232,42 @@ const Dashboard = () => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {applications.map((app) => (
                         <div
                           key={app.id}
-                          className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors gap-3"
                         >
-                          <div className="flex items-center gap-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                             <div className="flex items-center gap-2">
                               {statusIcons[app.status]}
-                              <Badge className={statusColors[app.status]}>
+                              <Badge className={`${statusColors[app.status]} text-xs sm:text-sm`}>
                                 {app.status.replace("_", " ")}
                               </Badge>
                             </div>
                             <div>
                               <Link
                                 to={`/schemes/${app.scheme_id}`}
-                                className="font-medium hover:text-primary transition-colors"
+                                className="font-medium text-sm sm:text-base hover:text-primary transition-colors line-clamp-1"
                               >
                                 {app.scheme_name}
                               </Link>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-xs sm:text-sm text-muted-foreground">
                                 Updated{" "}
                                 {new Date(app.updated_at).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 self-end sm:self-auto">
                             <Button
                               variant="ghost"
                               size="icon"
+                              className="h-8 w-8"
                               onClick={() => deleteApplication(app.id)}
                             >
                               <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                             </Button>
-                            <Button variant="ghost" size="icon" asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                               <Link to={`/schemes/${app.scheme_id}`}>
                                 <ChevronRight className="h-4 w-4" />
                               </Link>
