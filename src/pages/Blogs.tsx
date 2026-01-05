@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const blogs = [
   {
@@ -167,34 +168,37 @@ const Blogs = () => {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="glass-card-hover p-6 flex flex-col"
                 >
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className={`${getCategoryColor(blog.category)} px-3 py-1 rounded-full text-xs font-medium`}>
-                      {blog.category}
-                    </span>
-                  </div>
-                  <h3 className="font-serif text-2xl font-semibold mb-3 hover:text-primary cursor-pointer transition-colors">
-                    {blog.title}
-                  </h3>
-                  <p className="text-muted-foreground mb-4 flex-grow">{blog.excerpt}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold">
-                        {blog.avatar}
+                  <Link to={`/blogs/${blog.id}`}>
+                    <div className="glass-card-hover p-6 flex flex-col h-full">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className={`${getCategoryColor(blog.category)} px-3 py-1 rounded-full text-xs font-medium`}>
+                          {blog.category}
+                        </span>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">{blog.author}</p>
-                        <p className="text-xs text-muted-foreground">{blog.date}</p>
+                      <h3 className="font-serif text-2xl font-semibold mb-3 hover:text-primary cursor-pointer transition-colors">
+                        {blog.title}
+                      </h3>
+                      <p className="text-muted-foreground mb-4 flex-grow">{blog.excerpt}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold">
+                            {blog.avatar}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{blog.author}</p>
+                            <p className="text-xs text-muted-foreground">{blog.date}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {blog.readTime}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {blog.readTime}
-                      </span>
-                    </div>
-                  </div>
+                  </Link>
                 </motion.article>
               ))}
             </div>
@@ -219,36 +223,39 @@ const Blogs = () => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="glass-card-hover p-5"
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={`${getCategoryColor(blog.category)} px-2 py-0.5 rounded-full text-xs font-medium`}>
-                    {blog.category}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{blog.date}</span>
-                </div>
-                <h3 className="font-serif text-lg font-semibold mb-2 hover:text-primary cursor-pointer transition-colors line-clamp-2">
-                  {blog.title}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{blog.excerpt}</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full gradient-hero flex items-center justify-center text-white text-sm font-bold">
-                      {blog.avatar}
+                <Link to={`/blogs/${blog.id}`}>
+                  <div className="glass-card-hover p-5 h-full">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`${getCategoryColor(blog.category)} px-2 py-0.5 rounded-full text-xs font-medium`}>
+                        {blog.category}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{blog.date}</span>
                     </div>
-                    <span className="text-sm font-medium">{blog.author}</span>
+                    <h3 className="font-serif text-lg font-semibold mb-2 hover:text-primary cursor-pointer transition-colors line-clamp-2">
+                      {blog.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{blog.excerpt}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full gradient-hero flex items-center justify-center text-white text-sm font-bold">
+                          {blog.avatar}
+                        </div>
+                        <span className="text-sm font-medium">{blog.author}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-3 h-3" />
+                          {blog.likes}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageCircle className="w-3 h-3" />
+                          {blog.comments}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Heart className="w-3 h-3" />
-                      {blog.likes}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MessageCircle className="w-3 h-3" />
-                      {blog.comments}
-                    </span>
-                  </div>
-                </div>
+                </Link>
               </motion.article>
             ))}
           </div>
