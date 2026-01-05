@@ -129,11 +129,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Header />
       
       <main className="pt-20 sm:pt-28 pb-12 sm:pb-16">
-        <div className="container mx-auto px-3 sm:px-4 md:px-8">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Welcome Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -194,40 +194,40 @@ const Dashboard = () => {
           </div>
 
           {/* Main Content */}
-          <Tabs defaultValue="applications" className="space-y-6">
-            <TabsList className="bg-muted/50">
-              <TabsTrigger value="applications">My Applications</TabsTrigger>
-              <TabsTrigger value="conversations">Chat History</TabsTrigger>
+          <Tabs defaultValue="applications" className="space-y-4 sm:space-y-6">
+            <TabsList className="bg-muted/50 w-full sm:w-auto grid grid-cols-2 sm:inline-flex">
+              <TabsTrigger value="applications" className="text-xs sm:text-sm">My Applications</TabsTrigger>
+              <TabsTrigger value="conversations" className="text-xs sm:text-sm">Chat History</TabsTrigger>
             </TabsList>
 
             <TabsContent value="applications">
-              <Card className="glass-card">
-                <CardHeader className="flex flex-row items-center justify-between">
+              <Card className="glass-card overflow-hidden">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-6">
                   <div>
-                    <CardTitle>Scheme Applications</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="text-lg sm:text-xl">Scheme Applications</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
                       Track your progress on different government schemes
                     </CardDescription>
                   </div>
-                  <Button asChild>
+                  <Button asChild size="sm" className="w-full sm:w-auto">
                     <Link to="/schemes">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Scheme
                     </Link>
                   </Button>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6">
                   {loadingData ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-center py-6 sm:py-8 text-muted-foreground text-sm">
                       Loading...
                     </div>
                   ) : applications.length === 0 ? (
-                    <div className="text-center py-12">
-                      <FileCheck className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                      <p className="text-muted-foreground mb-4">
+                    <div className="text-center py-8 sm:py-12">
+                      <FileCheck className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground/50 mb-3 sm:mb-4" />
+                      <p className="text-muted-foreground mb-3 sm:mb-4 text-sm sm:text-base">
                         You haven't tracked any schemes yet
                       </p>
-                      <Button asChild>
+                      <Button asChild size="sm">
                         <Link to="/schemes">Explore Schemes</Link>
                       </Button>
                     </div>
@@ -282,42 +282,42 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="conversations">
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle>Recent Conversations</CardTitle>
-                  <CardDescription>
+              <Card className="glass-card overflow-hidden">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl">Recent Conversations</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Your chat history with Saheli, your scheme assistant
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 sm:p-6">
                   {loadingData ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-center py-6 sm:py-8 text-muted-foreground text-sm">
                       Loading...
                     </div>
                   ) : conversations.length === 0 ? (
-                    <div className="text-center py-12">
-                      <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                      <p className="text-muted-foreground mb-4">
+                    <div className="text-center py-8 sm:py-12">
+                      <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground/50 mb-3 sm:mb-4" />
+                      <p className="text-muted-foreground mb-3 sm:mb-4 text-sm sm:text-base">
                         No conversations yet. Start chatting with Saheli!
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Click the chat button in the bottom right corner
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {conversations.map((conv) => (
                         <div
                           key={conv.id}
-                          className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                          className="flex items-center justify-between p-3 sm:p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <MessageSquare className="h-5 w-5 text-primary" />
+                          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                             </div>
-                            <div>
-                              <p className="font-medium">{conv.title}</p>
-                              <p className="text-sm text-muted-foreground">
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm sm:text-base truncate">{conv.title}</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground">
                                 {new Date(conv.updated_at).toLocaleDateString()}
                               </p>
                             </div>
