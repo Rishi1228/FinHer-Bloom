@@ -10,6 +10,7 @@ import Learn from "./pages/Learn";
 import Community from "./pages/Community";
 import Blogs from "./pages/Blogs";
 import NotFound from "./pages/NotFound";
+import { SchemeChatbot } from "./components/SchemeChatbot";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <SchemeChatbot />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
