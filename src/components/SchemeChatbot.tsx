@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, Sparkles, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = {
   role: "user" | "assistant";
@@ -25,7 +27,9 @@ export function SchemeChatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -33,7 +37,45 @@ export function SchemeChatbot() {
     }
   }, [messages]);
 
-  const streamChat = async (userMessages: Message[]) => {
+  const createConversation = async () => {
+    if (!user) return null;
+    
+    const { data, error } = await supabase
+      .from("chat_conversations")
+      .insert({ user_id: user.id, title: "New Conversation" })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating conversation:", error);
+      return null;
+    }
+
+    setConversationId(data.id);
+    return data.id;
+  };
+
+  const saveMessage = async (convId: string, role: "user" | "assistant", content: string) => {
+    if (!user) return;
+
+    await supabase.from("chat_messages").insert({
+      conversation_id: convId,
+      user_id: user.id,
+      role,
+      content,
+    });
+
+    // Update conversation title based on first user message
+    if (role === "user" && messages.length === 0) {
+      const title = content.length > 50 ? content.substring(0, 50) + "..." : content;
+      await supabase
+        .from("chat_conversations")
+        .update({ title })
+        .eq("id", convId);
+    }
+  };
+
+  const streamChat = async (userMessages: Message[], convId: string | null) => {
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
@@ -92,6 +134,11 @@ export function SchemeChatbot() {
         }
       }
     }
+
+    // Save assistant message after streaming completes
+    if (convId && assistantContent) {
+      await saveMessage(convId, "assistant", assistantContent);
+    }
   };
 
   const sendMessage = async (text: string) => {
@@ -103,8 +150,19 @@ export function SchemeChatbot() {
     setInput("");
     setIsLoading(true);
 
+    // Create conversation if user is logged in and this is first message
+    let convId = conversationId;
+    if (user && !convId) {
+      convId = await createConversation();
+    }
+
+    // Save user message
+    if (convId) {
+      await saveMessage(convId, "user", text);
+    }
+
     try {
-      await streamChat(newMessages);
+      await streamChat(newMessages, convId);
     } catch (error) {
       console.error("Chat error:", error);
       setMessages((prev) => [
@@ -122,6 +180,11 @@ export function SchemeChatbot() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     sendMessage(input);
+  };
+
+  const startNewChat = () => {
+    setMessages([]);
+    setConversationId(null);
   };
 
   return (
@@ -165,14 +228,26 @@ export function SchemeChatbot() {
                     <p className="text-xs opacity-90">Your Scheme Assistant</p>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsOpen(false)}
-                  className="text-primary-foreground hover:bg-primary-foreground/10"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  {messages.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={startNewChat}
+                      className="text-primary-foreground hover:bg-primary-foreground/10 text-xs"
+                    >
+                      New Chat
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setIsOpen(false)}
+                    className="text-primary-foreground hover:bg-primary-foreground/10"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
 
               {/* Messages */}
@@ -188,6 +263,11 @@ export function SchemeChatbot() {
                           Namaste! I'm Saheli, your guide to government schemes for women. 
                           Tell me about yourself, and I'll help you find the best benefits! 💜
                         </p>
+                        {user && (
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            ✓ Your conversations are being saved
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-2">
