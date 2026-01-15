@@ -1,96 +1,45 @@
 import { motion } from "framer-motion";
-import { Clock, Heart, MessageCircle, BookOpen, ChevronRight, Search } from "lucide-react";
+import { Clock, Heart, MessageCircle, BookOpen, ChevronRight, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-
-const blogs = [
-  {
-    id: 1,
-    title: "How I Built My Emergency Fund in 6 Months",
-    excerpt: "Starting with just ₹1,000 per month, here's my journey to financial security and the lessons I learned along the way.",
-    author: "Priya Sharma",
-    avatar: "P",
-    date: "Dec 28, 2024",
-    readTime: "5 min read",
-    likes: 234,
-    comments: 45,
-    category: "Personal Finance",
-    featured: true,
-  },
-  {
-    id: 2,
-    title: "Sukanya Samriddhi Yojana: A Complete Guide",
-    excerpt: "Everything you need to know about opening an SSY account for your daughter and maximizing returns.",
-    author: "Anita Devi",
-    avatar: "A",
-    date: "Dec 25, 2024",
-    readTime: "8 min read",
-    likes: 567,
-    comments: 89,
-    category: "Schemes",
-    featured: true,
-  },
-  {
-    id: 3,
-    title: "My Mudra Loan Success Story",
-    excerpt: "From a small kitchen to a thriving catering business - how government schemes helped me grow.",
-    author: "Fatima Khan",
-    avatar: "F",
-    date: "Dec 20, 2024",
-    readTime: "6 min read",
-    likes: 432,
-    comments: 67,
-    category: "Entrepreneurship",
-    featured: false,
-  },
-  {
-    id: 4,
-    title: "Teaching Kids About Money: A Mother's Guide",
-    excerpt: "Simple ways to introduce financial literacy to children and build healthy money habits early.",
-    author: "Kavita Reddy",
-    avatar: "K",
-    date: "Dec 18, 2024",
-    readTime: "4 min read",
-    likes: 189,
-    comments: 34,
-    category: "Family Finance",
-    featured: false,
-  },
-  {
-    id: 5,
-    title: "Investment Mistakes I Made So You Don't Have To",
-    excerpt: "Honest reflections on my early investment journey and the expensive lessons I learned.",
-    author: "Meera Sinha",
-    avatar: "M",
-    date: "Dec 15, 2024",
-    readTime: "7 min read",
-    likes: 345,
-    comments: 56,
-    category: "Investing",
-    featured: false,
-  },
-];
-
-const categories = ["All", "Personal Finance", "Schemes", "Entrepreneurship", "Investing", "Family Finance"];
+import { useBlogs, useBlogCategories, Blog } from "@/hooks/useBlogs";
+import { format } from "date-fns";
 
 const getCategoryColor = (category: string) => {
   const colors: Record<string, string> = {
     "Personal Finance": "badge-lavender",
+    "Savings": "badge-lavender",
     Schemes: "badge-gold",
     Entrepreneurship: "badge-peach",
+    Investment: "badge-teal",
     Investing: "badge-teal",
     "Family Finance": "bg-primary/10 text-primary",
+    "Financial Literacy": "bg-secondary text-secondary-foreground",
+    Insurance: "bg-teal/10 text-teal",
+    Maternity: "badge-teal",
+    Pension: "badge-gold",
   };
   return colors[category] || "bg-muted text-muted-foreground";
+};
+
+const formatDate = (dateString: string) => {
+  try {
+    return format(new Date(dateString), 'MMM d, yyyy');
+  } catch {
+    return dateString;
+  }
 };
 
 const Blogs = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: blogs = [], isLoading } = useBlogs();
+  const { data: categories = ['All'] } = useBlogCategories();
 
   const filteredBlogs = blogs.filter((blog) => {
     const matchesSearch = blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -156,8 +105,18 @@ const Blogs = () => {
         </div>
       </section>
 
+      {/* Loading State */}
+      {isLoading && (
+        <section className="py-16">
+          <div className="container mx-auto px-4 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Loading articles...</span>
+          </div>
+        </section>
+      )}
+
       {/* Featured Articles */}
-      {featuredBlogs.length > 0 && (
+      {!isLoading && featuredBlogs.length > 0 && (
         <section className="py-16">
           <div className="container mx-auto px-4">
             <h2 className="font-serif text-2xl font-bold mb-8">Featured Stories</h2>
@@ -169,8 +128,17 @@ const Blogs = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Link to={`/blogs/${blog.id}`}>
+                  <Link to={`/blogs/${blog.slug}`}>
                     <div className="glass-card-hover p-6 flex flex-col h-full">
+                      {blog.image_url && (
+                        <div className="mb-4 rounded-xl overflow-hidden aspect-video">
+                          <img 
+                            src={blog.image_url} 
+                            alt={blog.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mb-3">
                         <span className={`${getCategoryColor(blog.category)} px-3 py-1 rounded-full text-xs font-medium`}>
                           {blog.category}
@@ -183,17 +151,17 @@ const Blogs = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full gradient-hero flex items-center justify-center text-white font-bold">
-                            {blog.avatar}
+                            {blog.author_name.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-sm font-medium">{blog.author}</p>
-                            <p className="text-xs text-muted-foreground">{blog.date}</p>
+                            <p className="text-sm font-medium">{blog.author_name}</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(blog.created_at)}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            {blog.readTime}
+                            {blog.read_time}
                           </span>
                         </div>
                       </div>
@@ -207,67 +175,74 @@ const Blogs = () => {
       )}
 
       {/* All Articles */}
-      <section className="py-8 pb-16">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="font-serif text-2xl font-bold">All Stories</h2>
-            <Button variant="ghost" className="gap-2">
-              Write a Story <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {regularBlogs.map((blog, index) => (
-              <motion.article
-                key={blog.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Link to={`/blogs/${blog.id}`}>
-                  <div className="glass-card-hover p-5 h-full">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className={`${getCategoryColor(blog.category)} px-2 py-0.5 rounded-full text-xs font-medium`}>
-                        {blog.category}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{blog.date}</span>
-                    </div>
-                    <h3 className="font-serif text-lg font-semibold mb-2 hover:text-primary cursor-pointer transition-colors line-clamp-2">
-                      {blog.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{blog.excerpt}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full gradient-hero flex items-center justify-center text-white text-sm font-bold">
-                          {blog.avatar}
-                        </div>
-                        <span className="text-sm font-medium">{blog.author}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Heart className="w-3 h-3" />
-                          {blog.likes}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageCircle className="w-3 h-3" />
-                          {blog.comments}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.article>
-            ))}
-          </div>
-
-          {filteredBlogs.length === 0 && (
-            <div className="text-center py-16">
-              <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No stories found. Try a different search.</p>
+      {!isLoading && (
+        <section className="py-8 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-serif text-2xl font-bold">All Stories</h2>
+              <Button variant="ghost" className="gap-2">
+                Write a Story <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
-          )}
-        </div>
-      </section>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {regularBlogs.map((blog, index) => (
+                <motion.article
+                  key={blog.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Link to={`/blogs/${blog.slug}`}>
+                    <div className="glass-card-hover p-5 h-full">
+                      {blog.image_url && (
+                        <div className="mb-3 rounded-lg overflow-hidden aspect-video">
+                          <img 
+                            src={blog.image_url} 
+                            alt={blog.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className={`${getCategoryColor(blog.category)} px-2 py-0.5 rounded-full text-xs font-medium`}>
+                          {blog.category}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{formatDate(blog.created_at)}</span>
+                      </div>
+                      <h3 className="font-serif text-lg font-semibold mb-2 hover:text-primary cursor-pointer transition-colors line-clamp-2">
+                        {blog.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{blog.excerpt}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full gradient-hero flex items-center justify-center text-white text-sm font-bold">
+                            {blog.author_name.charAt(0)}
+                          </div>
+                          <span className="text-sm font-medium">{blog.author_name}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {blog.read_time}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.article>
+              ))}
+            </div>
+
+            {filteredBlogs.length === 0 && (
+              <div className="text-center py-16">
+                <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No stories found. Try a different search.</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <Footer />
     </div>
