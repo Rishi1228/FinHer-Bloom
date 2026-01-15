@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BookOpen, PlayCircle, Clock, Award, ChevronRight, CheckCircle, Search, Filter } from "lucide-react";
+import { BookOpen, PlayCircle, Clock, Award, ChevronRight, CheckCircle, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -15,75 +15,8 @@ import {
 } from "@/components/ui/select";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
-const courses = [
-  {
-    id: "budgeting-basics",
-    title: "Budgeting Basics",
-    description: "Learn how to create and stick to a monthly budget that works for your lifestyle.",
-    duration: "45 mins",
-    lessons: 6,
-    level: "Beginner",
-    progress: 0,
-    image: "💰",
-    category: "basics",
-  },
-  {
-    id: "savings-schemes",
-    title: "Understanding Government Schemes",
-    description: "Deep dive into government savings schemes and how to maximize your benefits.",
-    duration: "1.5 hours",
-    lessons: 10,
-    level: "Beginner",
-    progress: 60,
-    image: "🏛️",
-    category: "schemes",
-  },
-  {
-    id: "investing-101",
-    title: "Investing 101",
-    description: "Start your investment journey with mutual funds, SIPs, and stock basics.",
-    duration: "2 hours",
-    lessons: 12,
-    level: "Intermediate",
-    progress: 25,
-    image: "📈",
-    category: "investing",
-  },
-  {
-    id: "tax-planning",
-    title: "Tax Planning for Women",
-    description: "Understand tax-saving instruments and plan your taxes efficiently.",
-    duration: "1 hour",
-    lessons: 8,
-    level: "Intermediate",
-    progress: 0,
-    image: "📋",
-    category: "tax",
-  },
-  {
-    id: "business-finance",
-    title: "Business Finance Essentials",
-    description: "Financial management skills for women entrepreneurs and small business owners.",
-    duration: "2.5 hours",
-    lessons: 15,
-    level: "Advanced",
-    progress: 0,
-    image: "🏪",
-    category: "business",
-  },
-  {
-    id: "retirement-planning",
-    title: "Retirement Planning",
-    description: "Plan for a secure retirement with pension schemes and long-term investments.",
-    duration: "1.5 hours",
-    lessons: 9,
-    level: "Intermediate",
-    progress: 0,
-    image: "🌅",
-    category: "investing",
-  },
-];
+import { useCourses, useCourseCategories, useUserCourseProgress } from "@/hooks/useCourses";
+import { useAuth } from "@/hooks/useAuth";
 
 const getLevelColor = (level: string) => {
   const colors: Record<string, string> = {
@@ -94,20 +27,53 @@ const getLevelColor = (level: string) => {
   return colors[level] || "bg-muted text-muted-foreground";
 };
 
+// Emoji icons for courses
+const getCourseEmoji = (category: string) => {
+  const emojis: Record<string, string> = {
+    Basics: "💰",
+    basics: "💰",
+    Schemes: "🏛️",
+    schemes: "🏛️",
+    Investment: "📈",
+    investment: "📈",
+    Taxation: "📋",
+    tax: "📋",
+    Business: "🏪",
+    business: "🏪",
+    Digital: "📱",
+    digital: "📱",
+  };
+  return emojis[category] || "📚";
+};
+
 const Learn = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
-  const filteredCourses = courses.filter((course) => {
+  const { user } = useAuth();
+  const { data: courses = [], isLoading } = useCourses();
+  const { data: categories = ['all'] } = useCourseCategories();
+  const { data: userProgress = [] } = useUserCourseProgress(user?.id);
+
+  // Add progress to courses
+  const coursesWithProgress = courses.map(course => {
+    const progress = userProgress.find(p => p.course_id === course.id);
+    return {
+      ...course,
+      progress: progress?.progress_percentage || 0,
+    };
+  });
+
+  const filteredCourses = coursesWithProgress.filter((course) => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesLevel = levelFilter === "all" || course.level === levelFilter;
-    const matchesCategory = categoryFilter === "all" || course.category === categoryFilter;
+    const matchesCategory = categoryFilter === "all" || course.category.toLowerCase() === categoryFilter.toLowerCase();
     return matchesSearch && matchesLevel && matchesCategory;
   });
 
-  const inProgressCourses = courses.filter(c => c.progress > 0 && c.progress < 100);
+  const inProgressCourses = coursesWithProgress.filter(c => c.progress > 0 && c.progress < 100);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -142,7 +108,7 @@ const Learn = () => {
                 <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
               <div>
-                <p className="font-serif text-xl sm:text-2xl font-bold">50+</p>
+                <p className="font-serif text-xl sm:text-2xl font-bold">{courses.length}+</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">Courses</p>
               </div>
             </div>
@@ -175,12 +141,12 @@ const Learn = () => {
             <h2 className="font-serif text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Continue Learning</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {inProgressCourses.map((course) => (
-                <Link key={course.id} to={`/courses/${course.id}`}>
+                <Link key={course.id} to={`/courses/${course.course_id}`}>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     className="glass-card p-4 flex items-center gap-4"
                   >
-                    <div className="text-3xl sm:text-4xl">{course.image}</div>
+                    <div className="text-3xl sm:text-4xl">{getCourseEmoji(course.category)}</div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-sm sm:text-base truncate">{course.title}</h3>
                       <div className="flex items-center gap-2 mt-1">
@@ -227,12 +193,11 @@ const Learn = () => {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="basics">Basics</SelectItem>
-                  <SelectItem value="schemes">Schemes</SelectItem>
-                  <SelectItem value="investing">Investing</SelectItem>
-                  <SelectItem value="tax">Tax</SelectItem>
-                  <SelectItem value="business">Business</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -251,7 +216,14 @@ const Learn = () => {
             </h2>
           </div>
 
-          {filteredCourses.length === 0 ? (
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading courses...</span>
+            </div>
+          )}
+
+          {!isLoading && filteredCourses.length === 0 ? (
             <div className="text-center py-12">
               <BookOpen className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
               <p className="text-muted-foreground">No courses found matching your criteria.</p>
@@ -273,12 +245,12 @@ const Learn = () => {
                   key={course.id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <Link to={`/courses/${course.id}`} className="block h-full">
+                  <Link to={`/courses/${course.course_id}`} className="block h-full">
                     <div className="glass-card-hover p-4 sm:p-6 flex flex-col h-full">
                       <div className="flex items-start justify-between mb-3 sm:mb-4">
-                        <div className="text-3xl sm:text-4xl">{course.image}</div>
+                        <div className="text-3xl sm:text-4xl">{getCourseEmoji(course.category)}</div>
                         <Badge className={getLevelColor(course.level)}>
                           {course.level}
                         </Badge>
@@ -298,7 +270,7 @@ const Learn = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <PlayCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                          {course.lessons} lessons
+                          {course.lessons_count} lessons
                         </div>
                       </div>
 

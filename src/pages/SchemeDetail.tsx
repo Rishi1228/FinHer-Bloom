@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Globe, MapPin, Star, Heart, Share2, Bell, CheckCircle2, IndianRupee, Percent, Calendar } from "lucide-react";
+import { ArrowLeft, Globe, MapPin, Star, Heart, Share2, Bell, CheckCircle2, IndianRupee, Percent, Calendar, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
@@ -9,7 +9,7 @@ import EligibilityChecker from "@/components/scheme/EligibilityChecker";
 import DocumentChecklist from "@/components/scheme/DocumentChecklist";
 import ApplicationSteps from "@/components/scheme/ApplicationSteps";
 import EarningsCalculator from "@/components/scheme/EarningsCalculator";
-import { getSchemeById } from "@/data/schemes";
+import { useSchemeById, convertToSchemeDetails } from "@/hooks/useSchemes";
 
 const getCategoryColor = (category: string) => {
   const colors: Record<string, string> = {
@@ -18,15 +18,29 @@ const getCategoryColor = (category: string) => {
     Maternity: "badge-teal",
     Pension: "badge-gold",
     Education: "bg-primary/10 text-primary",
+    Insurance: "bg-teal/10 text-teal",
   };
   return colors[category] || "bg-muted text-muted-foreground";
 };
 
 const SchemeDetail = () => {
   const { schemeId } = useParams<{ schemeId: string }>();
-  const scheme = schemeId ? getSchemeById(schemeId) : undefined;
+  const { data: schemeFromDB, isLoading } = useSchemeById(schemeId);
 
-  if (!scheme) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 pt-32 pb-16 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Loading scheme details...</span>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!schemeFromDB) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -44,6 +58,9 @@ const SchemeDetail = () => {
       </div>
     );
   }
+
+  // Convert to legacy format for existing components
+  const scheme = convertToSchemeDetails(schemeFromDB);
 
   const formatCurrency = (amount: number) => {
     if (amount >= 10000000) {
@@ -75,7 +92,7 @@ const SchemeDetail = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-4 flex-wrap">
                   <span className={`${getCategoryColor(scheme.category)} px-3 py-1 rounded-full text-sm font-medium`}>
                     {scheme.category}
                   </span>
@@ -118,44 +135,48 @@ const SchemeDetail = () => {
             >
               <h3 className="font-semibold mb-4">Quick Overview</h3>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
-                  <div className="flex items-center gap-2">
-                    <Percent className="w-5 h-5 text-primary" />
-                    <span className="text-sm">Interest Rate</span>
+                {scheme.interestRate > 0 && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <Percent className="w-5 h-5 text-primary" />
+                      <span className="text-sm">Interest Rate</span>
+                    </div>
+                    <span className="font-bold text-primary">{scheme.interestRate}%</span>
                   </div>
-                  <span className="font-bold text-primary">{scheme.interestRate}%</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
-                  <div className="flex items-center gap-2">
-                    <IndianRupee className="w-5 h-5 text-teal" />
-                    <span className="text-sm">Min Investment</span>
+                )}
+                {scheme.minInvestment > 0 && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <IndianRupee className="w-5 h-5 text-teal" />
+                      <span className="text-sm">Min Investment</span>
+                    </div>
+                    <span className="font-bold">{formatCurrency(scheme.minInvestment)}</span>
                   </div>
-                  <span className="font-bold">{formatCurrency(scheme.minInvestment)}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
-                  <div className="flex items-center gap-2">
-                    <IndianRupee className="w-5 h-5 text-secondary-foreground" />
-                    <span className="text-sm">Max Investment</span>
+                )}
+                {scheme.maxInvestment > 0 && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <IndianRupee className="w-5 h-5 text-secondary-foreground" />
+                      <span className="text-sm">Max Investment</span>
+                    </div>
+                    <span className="font-bold">{formatCurrency(scheme.maxInvestment)}</span>
                   </div>
-                  <span className="font-bold">{formatCurrency(scheme.maxInvestment)}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-accent-foreground" />
-                    <span className="text-sm">Tenure</span>
+                )}
+                {schemeFromDB.tenure && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-accent-foreground" />
+                      <span className="text-sm">Tenure</span>
+                    </div>
+                    <span className="font-bold">{schemeFromDB.tenure}</span>
                   </div>
-                  <span className="font-bold">
-                    {scheme.tenure.min === scheme.tenure.max 
-                      ? `${scheme.tenure.min} years` 
-                      : `${scheme.tenure.min}-${scheme.tenure.max} years`}
-                  </span>
-                </div>
+                )}
               </div>
 
               {scheme.online && scheme.onlineLink && (
                 <Button asChild className="w-full mt-4 btn-primary-glow rounded-xl">
                   <a href={scheme.onlineLink} target="_blank" rel="noopener noreferrer">
-                    Apply Now <Globe className="w-4 h-4 ml-2" />
+                    Apply Now <ExternalLink className="w-4 h-4 ml-2" />
                   </a>
                 </Button>
               )}

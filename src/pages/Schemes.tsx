@@ -1,92 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, ArrowRight, ExternalLink, MapPin, Globe, IndianRupee, Scale, Plus, X, Check } from "lucide-react";
+import { Search, Filter, ArrowRight, ExternalLink, MapPin, Globe, IndianRupee, Scale, Plus, X, Check, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SchemeCompare from "@/components/scheme/SchemeCompare";
 import { Link } from "react-router-dom";
-import { getAllSchemes } from "@/data/schemes";
-
-const schemes = [
-  {
-    id: "sukanya-samriddhi",
-    name: "Sukanya Samriddhi Yojana",
-    category: "Savings",
-    description: "Government-backed savings scheme for girl child education and marriage expenses with tax benefits.",
-    eligibility: "Girl child below 10 years",
-    interestRate: "8.2%",
-    minInvestment: "₹250",
-    maxInvestment: "₹1.5 Lakh/year",
-    online: true,
-    popular: true,
-  },
-  {
-    id: "mahila-samman",
-    name: "Mahila Samman Savings Certificate",
-    category: "Savings",
-    description: "Special one-time savings scheme exclusively for women offering higher interest rates.",
-    eligibility: "Women of any age",
-    interestRate: "7.5%",
-    minInvestment: "₹1,000",
-    maxInvestment: "₹2 Lakh",
-    online: true,
-    popular: true,
-  },
-  {
-    id: "mudra-yojana",
-    name: "Pradhan Mantri Mudra Yojana",
-    category: "Entrepreneurship",
-    description: "Collateral-free loans up to ₹10 lakh for women entrepreneurs to start or expand businesses.",
-    eligibility: "Women entrepreneurs",
-    interestRate: "Varies",
-    minInvestment: "₹50,000",
-    maxInvestment: "₹10 Lakh",
-    online: true,
-    popular: true,
-  },
-  {
-    id: "stand-up-india",
-    name: "Stand Up India",
-    category: "Entrepreneurship",
-    description: "Bank loans for SC/ST and women entrepreneurs to set up greenfield enterprises.",
-    eligibility: "Women above 18 years",
-    interestRate: "Base Rate + 3%",
-    minInvestment: "₹10 Lakh",
-    maxInvestment: "₹1 Crore",
-    online: false,
-    popular: false,
-  },
-  {
-    id: "matritva-vandana",
-    name: "Pradhan Mantri Matru Vandana Yojana",
-    category: "Maternity",
-    description: "Direct cash transfer of ₹11,000 to pregnant and lactating mothers for first child.",
-    eligibility: "Pregnant women (first child)",
-    interestRate: "N/A",
-    minInvestment: "N/A",
-    maxInvestment: "₹11,000 benefit",
-    online: true,
-    popular: true,
-  },
-  {
-    id: "atal-pension",
-    name: "Atal Pension Yojana",
-    category: "Pension",
-    description: "Guaranteed pension scheme for unorganized sector workers with government co-contribution.",
-    eligibility: "18-40 years",
-    interestRate: "8-9%",
-    minInvestment: "₹42/month",
-    maxInvestment: "₹210/month",
-    online: true,
-    popular: false,
-  },
-];
-
-const categories = ["All", "Savings", "Entrepreneurship", "Maternity", "Pension", "Education"];
+import { useSchemes, useSchemeCategories } from "@/hooks/useSchemes";
 
 const getCategoryColor = (category: string) => {
   const colors: Record<string, string> = {
@@ -95,8 +17,22 @@ const getCategoryColor = (category: string) => {
     Maternity: "badge-teal",
     Pension: "badge-gold",
     Education: "bg-primary/10 text-primary",
+    Insurance: "bg-teal/10 text-teal",
+    "Skill Development": "bg-accent text-accent-foreground",
   };
   return colors[category] || "bg-muted text-muted-foreground";
+};
+
+const formatCurrency = (amount: number | null) => {
+  if (!amount) return 'N/A';
+  if (amount >= 10000000) {
+    return `₹${(amount / 10000000).toFixed(0)} Cr`;
+  } else if (amount >= 100000) {
+    return `₹${(amount / 100000).toFixed(1)} L`;
+  } else if (amount >= 1000) {
+    return `₹${(amount / 1000).toFixed(0)}K`;
+  }
+  return `₹${amount.toLocaleString('en-IN')}`;
 };
 
 const Schemes = () => {
@@ -105,6 +41,9 @@ const Schemes = () => {
   const [compareMode, setCompareMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [showComparePanel, setShowComparePanel] = useState(false);
+
+  const { data: schemes = [], isLoading } = useSchemes();
+  const { data: categories = ['All'] } = useSchemeCategories();
 
   const filteredSchemes = schemes.filter((scheme) => {
     const matchesSearch = scheme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -140,7 +79,7 @@ const Schemes = () => {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto text-center"
           >
-            <span className="badge-gold inline-block mb-4">45+ Government Schemes</span>
+            <span className="badge-gold inline-block mb-4">{schemes.length}+ Government Schemes</span>
             <h1 className="font-serif text-4xl md:text-5xl font-bold mb-4">
               Find Schemes <span className="text-gradient">Made For You</span>
             </h1>
@@ -231,95 +170,111 @@ const Schemes = () => {
             )}
           </AnimatePresence>
 
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading schemes...</span>
+            </div>
+          )}
+
           {/* Results Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSchemes.map((scheme, index) => (
-              <motion.div
-                key={scheme.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={`glass-card-hover p-6 flex flex-col relative ${
-                  compareMode && selectedForCompare.includes(scheme.id) 
-                    ? "ring-2 ring-primary" 
-                    : ""
-                }`}
-              >
-                {/* Compare Checkbox */}
-                {compareMode && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-3 right-3"
-                  >
-                    <button
-                      onClick={() => toggleSchemeForCompare(scheme.id)}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                        selectedForCompare.includes(scheme.id)
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted hover:bg-muted/80"
-                      }`}
+          {!isLoading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredSchemes.map((scheme, index) => (
+                <motion.div
+                  key={scheme.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`glass-card-hover p-6 flex flex-col relative ${
+                    compareMode && selectedForCompare.includes(scheme.scheme_id) 
+                      ? "ring-2 ring-primary" 
+                      : ""
+                  }`}
+                >
+                  {/* Compare Checkbox */}
+                  {compareMode && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute top-3 right-3"
                     >
-                      {selectedForCompare.includes(scheme.id) ? (
-                        <Check className="w-4 h-4" />
-                      ) : (
-                        <Plus className="w-4 h-4" />
-                      )}
-                    </button>
-                  </motion.div>
-                )}
-
-                <div className="flex items-start justify-between mb-3">
-                  <span className={`${getCategoryColor(scheme.category)} px-3 py-1 rounded-full text-xs font-medium`}>
-                    {scheme.category}
-                  </span>
-                  {scheme.popular && !compareMode && (
-                    <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
-                      Popular
-                    </Badge>
+                      <button
+                        onClick={() => toggleSchemeForCompare(scheme.scheme_id)}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                          selectedForCompare.includes(scheme.scheme_id)
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted hover:bg-muted/80"
+                        }`}
+                      >
+                        {selectedForCompare.includes(scheme.scheme_id) ? (
+                          <Check className="w-4 h-4" />
+                        ) : (
+                          <Plus className="w-4 h-4" />
+                        )}
+                      </button>
+                    </motion.div>
                   )}
-                </div>
 
-                <h3 className="font-serif text-xl font-semibold mb-2">{scheme.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4 flex-grow">{scheme.description}</p>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <IndianRupee className="w-4 h-4 text-primary" />
-                    <span className="text-muted-foreground">Interest:</span>
-                    <span className="font-medium">{scheme.interestRate}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    {scheme.online ? (
-                      <Globe className="w-4 h-4 text-teal" />
-                    ) : (
-                      <MapPin className="w-4 h-4 text-accent-foreground" />
+                  <div className="flex items-start justify-between mb-3">
+                    <span className={`${getCategoryColor(scheme.category)} px-3 py-1 rounded-full text-xs font-medium`}>
+                      {scheme.category}
+                    </span>
+                    {scheme.interest_rate && scheme.interest_rate > 7 && !compareMode && (
+                      <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                        Popular
+                      </Badge>
                     )}
-                    <span className="text-muted-foreground">Apply:</span>
-                    <span className="font-medium">{scheme.online ? "Online Available" : "Visit Branch"}</span>
                   </div>
-                </div>
 
-                <div className="flex gap-2 mt-auto">
-                  <Link to={`/schemes/${scheme.id}`} className="flex-1">
-                    <Button variant="outline" className="w-full rounded-xl gap-2">
-                      Learn More
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </Link>
-                  {scheme.online && !compareMode && (
-                    <Button variant="ghost" size="icon" className="rounded-xl" asChild>
-                      <a href="#" target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    </Button>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  <h3 className="font-serif text-xl font-semibold mb-2">{scheme.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4 flex-grow line-clamp-2">
+                    {scheme.short_description || scheme.description}
+                  </p>
 
-          {filteredSchemes.length === 0 && (
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <IndianRupee className="w-4 h-4 text-primary" />
+                      <span className="text-muted-foreground">Interest:</span>
+                      <span className="font-medium">
+                        {scheme.interest_rate ? `${scheme.interest_rate}%` : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      {scheme.online_apply ? (
+                        <Globe className="w-4 h-4 text-teal" />
+                      ) : (
+                        <MapPin className="w-4 h-4 text-accent-foreground" />
+                      )}
+                      <span className="text-muted-foreground">Apply:</span>
+                      <span className="font-medium">
+                        {scheme.online_apply ? "Online Available" : "Visit Branch"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-auto">
+                    <Link to={`/schemes/${scheme.scheme_id}`} className="flex-1">
+                      <Button variant="outline" className="w-full rounded-xl gap-2">
+                        Learn More
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                    {scheme.online_apply && scheme.official_link && !compareMode && (
+                      <Button variant="ghost" size="icon" className="rounded-xl" asChild>
+                        <a href={scheme.official_link} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {!isLoading && filteredSchemes.length === 0 && (
             <div className="text-center py-16">
               <p className="text-muted-foreground">No schemes found matching your criteria.</p>
               <Button
@@ -380,7 +335,7 @@ const Schemes = () => {
             <div className="glass-card px-6 py-4 flex items-center gap-4 shadow-lg">
               <div className="flex -space-x-2">
                 {selectedForCompare.map((id) => {
-                  const scheme = schemes.find(s => s.id === id);
+                  const scheme = schemes.find(s => s.scheme_id === id);
                   return (
                     <div
                       key={id}

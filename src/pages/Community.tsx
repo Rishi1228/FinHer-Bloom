@@ -1,74 +1,13 @@
 import { motion } from "framer-motion";
-import { MessageCircle, Users, Heart, Star, Calendar, ChevronRight, Send, Search, Filter } from "lucide-react";
+import { MessageCircle, Users, Heart, Star, Calendar, ChevronRight, Send, Search, Loader2, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-
-const discussions = [
-  {
-    id: "1",
-    title: "Best savings schemes for new mothers?",
-    author: "Meera S.",
-    avatar: "M",
-    replies: 23,
-    likes: 45,
-    time: "2 hours ago",
-    category: "Schemes",
-  },
-  {
-    id: "2",
-    title: "How I saved ₹5 lakh in 2 years - My Journey",
-    author: "Priya K.",
-    avatar: "P",
-    replies: 89,
-    likes: 234,
-    time: "5 hours ago",
-    category: "Success Stories",
-  },
-  {
-    id: "3",
-    title: "Mudra Yojana application tips for first-timers",
-    author: "Anita D.",
-    avatar: "A",
-    replies: 34,
-    likes: 78,
-    time: "1 day ago",
-    category: "Entrepreneurship",
-  },
-  {
-    id: "4",
-    title: "Investment advice for single mothers",
-    author: "Fatima R.",
-    avatar: "F",
-    replies: 56,
-    likes: 123,
-    time: "2 days ago",
-    category: "Investing",
-  },
-  {
-    id: "5",
-    title: "PPF vs FD - Which is better for long term?",
-    author: "Sunita M.",
-    avatar: "S",
-    replies: 42,
-    likes: 98,
-    time: "3 days ago",
-    category: "Investing",
-  },
-  {
-    id: "6",
-    title: "How to start investing with ₹500?",
-    author: "Kavita R.",
-    avatar: "K",
-    replies: 67,
-    likes: 156,
-    time: "4 days ago",
-    category: "Investing",
-  },
-];
+import { useDiscussions, useDiscussionCategories, useDiscussionReplyCounts } from "@/hooks/useCommunity";
+import { formatDistanceToNow } from "date-fns";
 
 const upcomingEvents = [
   {
@@ -97,12 +36,31 @@ const upcomingEvents = [
   },
 ];
 
-const categories = ["All", "Schemes", "Success Stories", "Entrepreneurship", "Investing"];
+const getCategoryColor = (category: string) => {
+  const colors: Record<string, string> = {
+    Schemes: "badge-gold",
+    "Success Stories": "badge-teal",
+    Entrepreneurship: "badge-peach",
+    Investing: "badge-lavender",
+    Investment: "badge-lavender",
+    Savings: "badge-lavender",
+    Banking: "bg-secondary text-secondary-foreground",
+    Maternity: "badge-teal",
+    Taxation: "bg-muted text-muted-foreground",
+    Pension: "badge-gold",
+    "Digital Finance": "bg-primary/10 text-primary",
+  };
+  return colors[category] || "badge-lavender";
+};
 
 const Community = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [newPost, setNewPost] = useState("");
+
+  const { data: discussions = [], isLoading } = useDiscussions();
+  const { data: categories = ['All'] } = useDiscussionCategories();
+  const { data: replyCounts = {} } = useDiscussionReplyCounts();
 
   const filteredDiscussions = discussions.filter((discussion) => {
     const matchesSearch = discussion.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -115,6 +73,14 @@ const Community = () => {
       // In a real app, this would submit to the database
       alert("Post submitted! In a real app, this would be saved to the database.");
       setNewPost("");
+    }
+  };
+
+  const formatTime = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch {
+      return dateString;
     }
   };
 
@@ -172,7 +138,7 @@ const Community = () => {
                 <MessageCircle className="w-6 h-6 text-secondary-foreground" />
               </div>
               <div>
-                <p className="font-serif text-2xl font-bold">10K+</p>
+                <p className="font-serif text-2xl font-bold">{discussions.length}+</p>
                 <p className="text-sm text-muted-foreground">Discussions</p>
               </div>
             </div>
@@ -234,7 +200,14 @@ const Community = () => {
                 </span>
               </div>
 
-              {filteredDiscussions.length === 0 ? (
+              {isLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <span className="ml-2 text-muted-foreground">Loading discussions...</span>
+                </div>
+              )}
+
+              {!isLoading && filteredDiscussions.length === 0 ? (
                 <div className="text-center py-12">
                   <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground">No discussions found. Try a different search.</p>
@@ -246,27 +219,34 @@ const Community = () => {
                       key={discussion.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: index * 0.05 }}
                     >
                       <Link to={`/community/${discussion.id}`}>
                         <div className="glass-card-hover p-5 cursor-pointer">
                           <div className="flex gap-4">
                             <div className="w-10 h-10 rounded-full gradient-hero flex items-center justify-center text-white font-serif font-bold flex-shrink-0">
-                              {discussion.avatar}
+                              {discussion.author_name.charAt(0)}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className="badge-lavender text-xs">{discussion.category}</span>
-                                <span className="text-xs text-muted-foreground">{discussion.time}</span>
+                                {discussion.is_pinned && (
+                                  <Pin className="w-3 h-3 text-primary" />
+                                )}
+                                <span className={`${getCategoryColor(discussion.category)} text-xs px-2 py-0.5 rounded-full`}>
+                                  {discussion.category}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {formatTime(discussion.created_at)}
+                                </span>
                               </div>
                               <h3 className="font-semibold mb-1 hover:text-primary transition-colors">
                                 {discussion.title}
                               </h3>
-                              <p className="text-sm text-muted-foreground">by {discussion.author}</p>
+                              <p className="text-sm text-muted-foreground">by {discussion.author_name}</p>
                               <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <MessageCircle className="w-4 h-4" />
-                                  {discussion.replies} replies
+                                  {replyCounts[discussion.id] || 0} replies
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Heart className="w-4 h-4" />
