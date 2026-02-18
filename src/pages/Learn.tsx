@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BookOpen, PlayCircle, Clock, Award, ChevronRight, CheckCircle, Search, Loader2 } from "lucide-react";
+import { BookOpen, PlayCircle, Clock, Award, ChevronRight, CheckCircle, Search, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCourses, useCourseCategories, useUserCourseProgress } from "@/hooks/useCourses";
+import { useVideos, useVideoCategories } from "@/hooks/useVideos";
 import { useAuth } from "@/hooks/useAuth";
 
 const getLevelColor = (level: string) => {
@@ -27,21 +28,14 @@ const getLevelColor = (level: string) => {
   return colors[level] || "bg-muted text-muted-foreground";
 };
 
-// Emoji icons for courses
 const getCourseEmoji = (category: string) => {
   const emojis: Record<string, string> = {
-    Basics: "💰",
-    basics: "💰",
-    Schemes: "🏛️",
-    schemes: "🏛️",
-    Investment: "📈",
-    investment: "📈",
-    Taxation: "📋",
-    tax: "📋",
-    Business: "🏪",
-    business: "🏪",
-    Digital: "📱",
-    digital: "📱",
+    Basics: "💰", basics: "💰",
+    Schemes: "🏛️", schemes: "🏛️",
+    Investment: "📈", investment: "📈",
+    Taxation: "📋", tax: "📋",
+    Business: "🏪", business: "🏪",
+    Digital: "📱", digital: "📱",
   };
   return emojis[category] || "📚";
 };
@@ -50,19 +44,18 @@ const Learn = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [videoCategoryFilter, setVideoCategoryFilter] = useState("All");
 
   const { user } = useAuth();
   const { data: courses = [], isLoading } = useCourses();
   const { data: categories = ['all'] } = useCourseCategories();
   const { data: userProgress = [] } = useUserCourseProgress(user?.id);
+  const { data: videos = [], isLoading: videosLoading } = useVideos();
+  const { data: videoCategories = ['All'] } = useVideoCategories();
 
-  // Add progress to courses
   const coursesWithProgress = courses.map(course => {
     const progress = userProgress.find(p => p.course_id === course.id);
-    return {
-      ...course,
-      progress: progress?.progress_percentage || 0,
-    };
+    return { ...course, progress: progress?.progress_percentage || 0 };
   });
 
   const filteredCourses = coursesWithProgress.filter((course) => {
@@ -72,6 +65,10 @@ const Learn = () => {
     const matchesCategory = categoryFilter === "all" || course.category.toLowerCase() === categoryFilter.toLowerCase();
     return matchesSearch && matchesLevel && matchesCategory;
   });
+
+  const filteredVideos = videos.filter(v =>
+    videoCategoryFilter === "All" || v.category === videoCategoryFilter
+  );
 
   const inProgressCourses = coursesWithProgress.filter(c => c.progress > 0 && c.progress < 100);
 
@@ -117,8 +114,8 @@ const Learn = () => {
                 <PlayCircle className="w-5 h-5 sm:w-6 sm:h-6 text-secondary-foreground" />
               </div>
               <div>
-                <p className="font-serif text-xl sm:text-2xl font-bold">200+</p>
-                <p className="text-xs sm:text-sm text-muted-foreground">Video Lessons</p>
+                <p className="font-serif text-xl sm:text-2xl font-bold">{videos.length}+</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Videos</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -142,10 +139,7 @@ const Learn = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {inProgressCourses.map((course) => (
                 <Link key={course.id} to={`/courses/${course.course_id}`}>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="glass-card p-4 flex items-center gap-4"
-                  >
+                  <motion.div whileHover={{ scale: 1.02 }} className="glass-card p-4 flex items-center gap-4">
                     <div className="text-3xl sm:text-4xl">{getCourseEmoji(course.category)}</div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-sm sm:text-base truncate">{course.title}</h3>
@@ -229,11 +223,7 @@ const Learn = () => {
               <p className="text-muted-foreground">No courses found matching your criteria.</p>
               <Button 
                 variant="link" 
-                onClick={() => {
-                  setSearchQuery("");
-                  setLevelFilter("all");
-                  setCategoryFilter("all");
-                }}
+                onClick={() => { setSearchQuery(""); setLevelFilter("all"); setCategoryFilter("all"); }}
               >
                 Clear filters
               </Button>
@@ -251,18 +241,10 @@ const Learn = () => {
                     <div className="glass-card-hover p-4 sm:p-6 flex flex-col h-full">
                       <div className="flex items-start justify-between mb-3 sm:mb-4">
                         <div className="text-3xl sm:text-4xl">{getCourseEmoji(course.category)}</div>
-                        <Badge className={getLevelColor(course.level)}>
-                          {course.level}
-                        </Badge>
+                        <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
                       </div>
-
-                      <h3 className="font-serif text-lg sm:text-xl font-semibold mb-2 line-clamp-2">
-                        {course.title}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground mb-4 flex-grow line-clamp-2">
-                        {course.description}
-                      </p>
-
+                      <h3 className="font-serif text-lg sm:text-xl font-semibold mb-2 line-clamp-2">{course.title}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-4 flex-grow line-clamp-2">{course.description}</p>
                       <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-4">
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -273,7 +255,6 @@ const Learn = () => {
                           {course.lessons_count} lessons
                         </div>
                       </div>
-
                       {course.progress > 0 && (
                         <div className="mb-4">
                           <div className="flex items-center justify-between text-xs sm:text-sm mb-2">
@@ -283,22 +264,102 @@ const Learn = () => {
                           <Progress value={course.progress} className="h-2" />
                         </div>
                       )}
-
                       <Button
                         className={`w-full ${course.progress > 0 ? "btn-primary-glow" : ""}`}
                         variant={course.progress > 0 ? "default" : "outline"}
                       >
                         {course.progress > 0 ? (
-                          <>
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Continue Learning
-                          </>
-                        ) : (
-                          "Start Course"
-                        )}
+                          <><CheckCircle className="w-4 h-4 mr-2" />Continue Learning</>
+                        ) : "Start Course"}
                       </Button>
                     </div>
                   </Link>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Videos Section */}
+      <section className="py-12 sm:py-16 bg-muted/30">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+            <h2 className="font-serif text-xl sm:text-2xl md:text-3xl font-bold">
+              <PlayCircle className="w-6 h-6 sm:w-7 sm:h-7 inline-block mr-2 text-primary" />
+              Video Library
+            </h2>
+            <Select value={videoCategoryFilter} onValueChange={setVideoCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {videoCategories.map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {videosLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : filteredVideos.length === 0 ? (
+            <div className="text-center py-12">
+              <PlayCircle className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+              <p className="text-muted-foreground">No videos found in this category.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {filteredVideos.map((video, index) => (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <a
+                    href={video.video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block h-full"
+                  >
+                    <div className="glass-card-hover overflow-hidden flex flex-col h-full">
+                      {video.thumbnail_url ? (
+                        <div className="relative aspect-video bg-muted">
+                          <img
+                            src={video.thumbnail_url}
+                            alt={video.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                            <PlayCircle className="w-12 h-12 text-white" />
+                          </div>
+                          {video.duration && (
+                            <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                              {video.duration}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="aspect-video bg-muted flex items-center justify-center">
+                          <PlayCircle className="w-12 h-12 text-muted-foreground/50" />
+                        </div>
+                      )}
+                      <div className="p-4 flex flex-col flex-grow">
+                        <Badge variant="secondary" className="w-fit mb-2 text-xs">{video.category}</Badge>
+                        <h3 className="font-semibold text-sm sm:text-base mb-2 line-clamp-2">{video.title}</h3>
+                        {video.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2 mb-3 flex-grow">{video.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {video.source && <span>{video.source}</span>}
+                          <ExternalLink className="w-3 h-3 ml-auto" />
+                        </div>
+                      </div>
+                    </div>
+                  </a>
                 </motion.div>
               ))}
             </div>
