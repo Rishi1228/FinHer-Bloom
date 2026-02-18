@@ -1,17 +1,8 @@
-import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  BookOpen,
-  PlayCircle,
-  Clock,
-  Award,
-  ChevronLeft,
-  CheckCircle,
-  Lock,
-  Play,
-  Pause,
-  Volume2,
+  BookOpen, PlayCircle, Clock, Award, ChevronLeft, CheckCircle, Loader2, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -22,307 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-
-// Course data
-const coursesData: Record<string, Course> = {
-  "budgeting-basics": {
-    id: "budgeting-basics",
-    title: "Budgeting Basics",
-    description: "Learn how to create and stick to a monthly budget that works for your lifestyle. This comprehensive course covers everything from tracking expenses to setting financial goals.",
-    duration: "45 mins",
-    lessons: 6,
-    level: "Beginner",
-    image: "💰",
-    instructor: "Priya Sharma",
-    rating: 4.8,
-    students: 2340,
-    modules: [
-      {
-        id: "m1",
-        title: "Introduction to Budgeting",
-        lessons: [
-          { id: "l1", title: "Why Budgeting Matters", duration: "5 min", completed: false },
-          { id: "l2", title: "Understanding Your Income", duration: "7 min", completed: false },
-        ],
-      },
-      {
-        id: "m2",
-        title: "Tracking Expenses",
-        lessons: [
-          { id: "l3", title: "Categorizing Your Spending", duration: "8 min", completed: false },
-          { id: "l4", title: "Tools for Expense Tracking", duration: "6 min", completed: false },
-        ],
-      },
-      {
-        id: "m3",
-        title: "Creating Your Budget",
-        lessons: [
-          { id: "l5", title: "The 50/30/20 Rule", duration: "10 min", completed: false },
-          { id: "l6", title: "Sticking to Your Budget", duration: "9 min", completed: false },
-        ],
-      },
-    ],
-  },
-  "savings-schemes": {
-    id: "savings-schemes",
-    title: "Understanding Government Schemes",
-    description: "Deep dive into government savings schemes and how to maximize your benefits. Learn about PPF, SSY, PMJDY, and more schemes designed for women.",
-    duration: "1.5 hours",
-    lessons: 10,
-    level: "Beginner",
-    image: "🏛️",
-    instructor: "Anjali Gupta",
-    rating: 4.9,
-    students: 3560,
-    modules: [
-      {
-        id: "m1",
-        title: "Overview of Government Schemes",
-        lessons: [
-          { id: "l1", title: "Why Government Schemes Matter", duration: "8 min", completed: true },
-          { id: "l2", title: "Types of Schemes Available", duration: "10 min", completed: true },
-        ],
-      },
-      {
-        id: "m2",
-        title: "Savings Schemes for Women",
-        lessons: [
-          { id: "l3", title: "Sukanya Samriddhi Yojana", duration: "12 min", completed: true },
-          { id: "l4", title: "Mahila Samman Savings Certificate", duration: "10 min", completed: false },
-          { id: "l5", title: "PM Jan Dhan Yojana", duration: "8 min", completed: false },
-        ],
-      },
-      {
-        id: "m3",
-        title: "Investment Schemes",
-        lessons: [
-          { id: "l6", title: "Public Provident Fund (PPF)", duration: "10 min", completed: false },
-          { id: "l7", title: "National Savings Certificate", duration: "8 min", completed: false },
-          { id: "l8", title: "Senior Citizens Savings Scheme", duration: "9 min", completed: false },
-        ],
-      },
-      {
-        id: "m4",
-        title: "Application & Documentation",
-        lessons: [
-          { id: "l9", title: "Required Documents", duration: "7 min", completed: false },
-          { id: "l10", title: "Step-by-Step Application Guide", duration: "10 min", completed: false },
-        ],
-      },
-    ],
-  },
-  "investing-101": {
-    id: "investing-101",
-    title: "Investing 101",
-    description: "Start your investment journey with mutual funds, SIPs, and stock basics. Learn risk management and portfolio diversification.",
-    duration: "2 hours",
-    lessons: 12,
-    level: "Intermediate",
-    image: "📈",
-    instructor: "Neha Verma",
-    rating: 4.7,
-    students: 1890,
-    modules: [
-      {
-        id: "m1",
-        title: "Investment Fundamentals",
-        lessons: [
-          { id: "l1", title: "What is Investing?", duration: "8 min", completed: true },
-          { id: "l2", title: "Risk vs Return", duration: "10 min", completed: true },
-          { id: "l3", title: "Power of Compounding", duration: "8 min", completed: true },
-        ],
-      },
-      {
-        id: "m2",
-        title: "Mutual Funds",
-        lessons: [
-          { id: "l4", title: "Types of Mutual Funds", duration: "12 min", completed: false },
-          { id: "l5", title: "How to Choose a Fund", duration: "10 min", completed: false },
-          { id: "l6", title: "SIP vs Lumpsum", duration: "9 min", completed: false },
-        ],
-      },
-      {
-        id: "m3",
-        title: "Stock Market Basics",
-        lessons: [
-          { id: "l7", title: "Understanding Stocks", duration: "10 min", completed: false },
-          { id: "l8", title: "How to Read Stock Charts", duration: "12 min", completed: false },
-          { id: "l9", title: "Building a Portfolio", duration: "11 min", completed: false },
-        ],
-      },
-      {
-        id: "m4",
-        title: "Getting Started",
-        lessons: [
-          { id: "l10", title: "Opening a Demat Account", duration: "8 min", completed: false },
-          { id: "l11", title: "Your First Investment", duration: "10 min", completed: false },
-          { id: "l12", title: "Common Mistakes to Avoid", duration: "9 min", completed: false },
-        ],
-      },
-    ],
-  },
-  "tax-planning": {
-    id: "tax-planning",
-    title: "Tax Planning for Women",
-    description: "Understand tax-saving instruments and plan your taxes efficiently. Learn about deductions, exemptions, and smart tax strategies.",
-    duration: "1 hour",
-    lessons: 8,
-    level: "Intermediate",
-    image: "📋",
-    instructor: "Kavita Mehta",
-    rating: 4.6,
-    students: 1450,
-    modules: [
-      {
-        id: "m1",
-        title: "Tax Basics",
-        lessons: [
-          { id: "l1", title: "Understanding Income Tax", duration: "8 min", completed: false },
-          { id: "l2", title: "Tax Slabs & Rates", duration: "7 min", completed: false },
-        ],
-      },
-      {
-        id: "m2",
-        title: "Tax Saving Instruments",
-        lessons: [
-          { id: "l3", title: "Section 80C Deductions", duration: "10 min", completed: false },
-          { id: "l4", title: "Health Insurance (80D)", duration: "8 min", completed: false },
-          { id: "l5", title: "Home Loan Benefits", duration: "9 min", completed: false },
-        ],
-      },
-      {
-        id: "m3",
-        title: "Filing Returns",
-        lessons: [
-          { id: "l6", title: "Documents Required", duration: "6 min", completed: false },
-          { id: "l7", title: "Filing ITR Online", duration: "10 min", completed: false },
-          { id: "l8", title: "Common Filing Mistakes", duration: "7 min", completed: false },
-        ],
-      },
-    ],
-  },
-  "business-finance": {
-    id: "business-finance",
-    title: "Business Finance Essentials",
-    description: "Financial management skills for women entrepreneurs and small business owners. Learn accounting, cash flow management, and funding options.",
-    duration: "2.5 hours",
-    lessons: 15,
-    level: "Advanced",
-    image: "🏪",
-    instructor: "Sunita Reddy",
-    rating: 4.8,
-    students: 980,
-    modules: [
-      {
-        id: "m1",
-        title: "Business Accounting",
-        lessons: [
-          { id: "l1", title: "Bookkeeping Basics", duration: "10 min", completed: false },
-          { id: "l2", title: "Understanding Financial Statements", duration: "12 min", completed: false },
-          { id: "l3", title: "Managing Cash Flow", duration: "10 min", completed: false },
-        ],
-      },
-      {
-        id: "m2",
-        title: "Funding Your Business",
-        lessons: [
-          { id: "l4", title: "Government Loans for Women", duration: "10 min", completed: false },
-          { id: "l5", title: "Bank Loans & Credit", duration: "9 min", completed: false },
-          { id: "l6", title: "Angel Investors & VCs", duration: "11 min", completed: false },
-          { id: "l7", title: "Crowdfunding Options", duration: "8 min", completed: false },
-        ],
-      },
-      {
-        id: "m3",
-        title: "Pricing & Profitability",
-        lessons: [
-          { id: "l8", title: "Cost Analysis", duration: "10 min", completed: false },
-          { id: "l9", title: "Pricing Strategies", duration: "9 min", completed: false },
-          { id: "l10", title: "Profit Margins", duration: "8 min", completed: false },
-        ],
-      },
-      {
-        id: "m4",
-        title: "Growth & Scaling",
-        lessons: [
-          { id: "l11", title: "Financial Planning for Growth", duration: "11 min", completed: false },
-          { id: "l12", title: "Managing Business Taxes", duration: "10 min", completed: false },
-          { id: "l13", title: "GST for Small Businesses", duration: "12 min", completed: false },
-          { id: "l14", title: "Hiring & Payroll", duration: "9 min", completed: false },
-          { id: "l15", title: "Exit Strategies", duration: "10 min", completed: false },
-        ],
-      },
-    ],
-  },
-  "retirement-planning": {
-    id: "retirement-planning",
-    title: "Retirement Planning",
-    description: "Plan for a secure retirement with pension schemes and long-term investments. Learn about NPS, EPF, and building a retirement corpus.",
-    duration: "1.5 hours",
-    lessons: 9,
-    level: "Intermediate",
-    image: "🌅",
-    instructor: "Rekha Iyer",
-    rating: 4.7,
-    students: 1230,
-    modules: [
-      {
-        id: "m1",
-        title: "Retirement Basics",
-        lessons: [
-          { id: "l1", title: "Why Start Early", duration: "8 min", completed: false },
-          { id: "l2", title: "Calculating Your Retirement Corpus", duration: "10 min", completed: false },
-        ],
-      },
-      {
-        id: "m2",
-        title: "Pension Schemes",
-        lessons: [
-          { id: "l3", title: "National Pension System (NPS)", duration: "12 min", completed: false },
-          { id: "l4", title: "Employee Provident Fund", duration: "10 min", completed: false },
-          { id: "l5", title: "Atal Pension Yojana", duration: "8 min", completed: false },
-        ],
-      },
-      {
-        id: "m3",
-        title: "Investment Strategies",
-        lessons: [
-          { id: "l6", title: "Asset Allocation by Age", duration: "10 min", completed: false },
-          { id: "l7", title: "Annuity Plans", duration: "9 min", completed: false },
-          { id: "l8", title: "Health Insurance in Retirement", duration: "8 min", completed: false },
-          { id: "l9", title: "Creating Passive Income", duration: "10 min", completed: false },
-        ],
-      },
-    ],
-  },
-};
-
-interface Lesson {
-  id: string;
-  title: string;
-  duration: string;
-  completed: boolean;
-}
-
-interface Module {
-  id: string;
-  title: string;
-  lessons: Lesson[];
-}
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  duration: string;
-  lessons: number;
-  level: string;
-  image: string;
-  instructor: string;
-  rating: number;
-  students: number;
-  modules: Module[];
-}
+import { useCourseById, useCourseModules, useCourseLessons, CourseLesson } from "@/hooks/useCourses";
 
 const getLevelColor = (level: string) => {
   const colors: Record<string, string> = {
@@ -333,61 +24,73 @@ const getLevelColor = (level: string) => {
   return colors[level] || "bg-muted text-muted-foreground";
 };
 
+const getCourseEmoji = (category: string) => {
+  const emojis: Record<string, string> = {
+    Basics: "💰", Investment: "📈", Schemes: "🏛️",
+    Taxation: "📋", Business: "🏪", Digital: "📱",
+  };
+  return emojis[category] || "📚";
+};
+
+const getYouTubeEmbedUrl = (url: string | null) => {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+};
+
 const CourseDetail = () => {
   const { courseId } = useParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [course, setCourse] = useState<Course | null>(null);
-  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+
+  const { data: course, isLoading: courseLoading } = useCourseById(courseId);
+  const { data: modules = [] } = useCourseModules(course?.id);
+  const moduleIds = useMemo(() => modules.map(m => m.id), [modules]);
+  const { data: lessons = [] } = useCourseLessons(moduleIds);
+
+  const [currentLesson, setCurrentLesson] = useState<CourseLesson | null>(null);
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
 
+  // Set first lesson when data loads
   useEffect(() => {
-    if (courseId && coursesData[courseId]) {
-      const courseData = coursesData[courseId];
-      setCourse(courseData);
-      
-      // Set initial completed lessons
-      const completed = new Set<string>();
-      courseData.modules.forEach(module => {
-        module.lessons.forEach(lesson => {
-          if (lesson.completed) {
-            completed.add(lesson.id);
-          }
-        });
-      });
-      setCompletedLessons(completed);
-      
-      // Find first incomplete lesson
-      for (const module of courseData.modules) {
-        for (const lesson of module.lessons) {
-          if (!lesson.completed) {
-            setCurrentLesson(lesson);
-            return;
-          }
-        }
-      }
-      // All completed, set last lesson
-      const lastModule = courseData.modules[courseData.modules.length - 1];
-      setCurrentLesson(lastModule.lessons[lastModule.lessons.length - 1]);
+    if (lessons.length > 0 && !currentLesson) {
+      setCurrentLesson(lessons[0]);
     }
-  }, [courseId]);
+  }, [lessons, currentLesson]);
 
-  if (!course) {
+  if (courseLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Course not found</div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="pt-32 pb-16 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+        <Footer />
       </div>
     );
   }
 
-  const totalLessons = course.modules.reduce((acc, m) => acc + m.lessons.length, 0);
-  const progressPercent = Math.round((completedLessons.size / totalLessons) * 100);
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="pt-32 pb-16 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="font-serif text-2xl font-bold mb-2">Course not found</h2>
+            <Link to="/learn"><Button>Back to Courses</Button></Link>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
-  const handleLessonClick = (lesson: Lesson) => {
+  const totalLessons = lessons.length;
+  const progressPercent = totalLessons > 0 ? Math.round((completedLessons.size / totalLessons) * 100) : 0;
+  const embedUrl = getYouTubeEmbedUrl(currentLesson?.video_url || course.video_url);
+
+  const handleLessonClick = (lesson: CourseLesson) => {
     setCurrentLesson(lesson);
-    setIsPlaying(false);
   };
 
   const markComplete = () => {
@@ -397,22 +100,15 @@ const CourseDetail = () => {
         title: "Lesson completed! 🎉",
         description: `You've completed "${currentLesson.title}"`,
       });
-      
-      // Find and set next lesson
-      let foundCurrent = false;
-      for (const module of course.modules) {
-        for (const lesson of module.lessons) {
-          if (foundCurrent && !completedLessons.has(lesson.id)) {
-            setCurrentLesson(lesson);
-            return;
-          }
-          if (lesson.id === currentLesson.id) {
-            foundCurrent = true;
-          }
-        }
-      }
+
+      // Find next lesson
+      const currentIndex = lessons.findIndex(l => l.id === currentLesson.id);
+      const nextLesson = lessons.find((l, i) => i > currentIndex && !completedLessons.has(l.id));
+      if (nextLesson) setCurrentLesson(nextLesson);
     }
   };
+
+  const getLessonsForModule = (moduleId: string) => lessons.filter(l => l.module_id === moduleId);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -420,7 +116,6 @@ const CourseDetail = () => {
 
       <main className="pt-20 sm:pt-28 pb-12 sm:pb-16">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Back Button */}
           <Button variant="ghost" size="sm" className="mb-4" asChild>
             <Link to="/learn">
               <ChevronLeft className="w-4 h-4 mr-1" />
@@ -433,56 +128,55 @@ const CourseDetail = () => {
             <div className="lg:col-span-2 space-y-6">
               {/* Video Player */}
               <Card className="glass-card overflow-hidden">
-                <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center relative">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4">{course.image}</div>
-                    {currentLesson && (
-                      <p className="text-lg font-medium">{currentLesson.title}</p>
-                    )}
+                {embedUrl ? (
+                  <div className="aspect-video">
+                    <iframe
+                      src={embedUrl}
+                      title={currentLesson?.title || course.title}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
                   </div>
-                  
-                  {/* Play Controls */}
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      onClick={() => setIsPlaying(!isPlaying)}
-                    >
-                      {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                    </Button>
-                    <div className="flex items-center gap-2">
-                      <Volume2 className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {currentLesson?.duration}
-                      </span>
+                ) : (
+                  <div className="aspect-video bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">{getCourseEmoji(course.category)}</div>
+                      <p className="text-lg font-medium">{currentLesson?.title || course.title}</p>
+                      <p className="text-sm text-muted-foreground mt-2">Video coming soon</p>
                     </div>
                   </div>
-                </div>
-                
+                )}
+
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <h2 className="font-serif text-xl font-semibold">
-                        {currentLesson?.title}
+                        {currentLesson?.title || course.title}
                       </h2>
                       <p className="text-sm text-muted-foreground">
-                        Duration: {currentLesson?.duration}
+                        Duration: {currentLesson?.duration || course.duration}
                       </p>
                     </div>
-                    <Button
-                      onClick={markComplete}
-                      disabled={currentLesson ? completedLessons.has(currentLesson.id) : true}
-                      className="btn-primary-glow"
-                    >
-                      {currentLesson && completedLessons.has(currentLesson.id) ? (
-                        <>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Completed
-                        </>
-                      ) : (
-                        "Mark as Complete"
+                    <div className="flex gap-2">
+                      {currentLesson?.video_url && (
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={currentLesson.video_url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            YouTube
+                          </a>
+                        </Button>
                       )}
-                    </Button>
+                      <Button
+                        onClick={markComplete}
+                        disabled={!currentLesson || completedLessons.has(currentLesson.id)}
+                        className="btn-primary-glow"
+                      >
+                        {currentLesson && completedLessons.has(currentLesson.id) ? (
+                          <><CheckCircle className="w-4 h-4 mr-2" />Completed</>
+                        ) : "Mark as Complete"}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -491,27 +185,21 @@ const CourseDetail = () => {
               <Card className="glass-card p-4 sm:p-6">
                 <h3 className="font-serif text-lg font-semibold mb-3">About This Course</h3>
                 <p className="text-muted-foreground text-sm sm:text-base">{course.description}</p>
-                
                 <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-border">
                   <div className="flex items-center gap-2 text-sm">
-                    <Award className="w-4 h-4 text-primary" />
-                    <span>Instructor: {course.instructor}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
                     <BookOpen className="w-4 h-4 text-primary" />
-                    <span>{course.students.toLocaleString()} students</span>
+                    <span>{course.lessons_count} lessons</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-yellow-500">★</span>
-                    <span>{course.rating} rating</span>
+                    <Clock className="w-4 h-4 text-primary" />
+                    <span>{course.duration}</span>
                   </div>
                 </div>
               </Card>
             </div>
 
-            {/* Sidebar - Course Content */}
+            {/* Sidebar */}
             <div className="space-y-4">
-              {/* Progress Card */}
               <Card className="glass-card p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Your Progress</span>
@@ -523,10 +211,9 @@ const CourseDetail = () => {
                 </p>
               </Card>
 
-              {/* Course Info */}
               <Card className="glass-card p-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="text-3xl">{course.image}</div>
+                  <div className="text-3xl">{getCourseEmoji(course.category)}</div>
                   <div>
                     <h3 className="font-serif font-semibold line-clamp-1">{course.title}</h3>
                     <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
@@ -539,7 +226,7 @@ const CourseDetail = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <PlayCircle className="w-4 h-4" />
-                    {course.lessons} lessons
+                    {course.lessons_count} lessons
                   </div>
                 </div>
               </Card>
@@ -549,62 +236,69 @@ const CourseDetail = () => {
                 <div className="p-4 border-b border-border">
                   <h3 className="font-serif font-semibold">Course Content</h3>
                 </div>
-                <Accordion type="multiple" defaultValue={[course.modules[0]?.id]} className="w-full">
-                  {course.modules.map((module, moduleIndex) => {
-                    const moduleCompleted = module.lessons.every(l => completedLessons.has(l.id));
-                    const moduleLessonsCompleted = module.lessons.filter(l => completedLessons.has(l.id)).length;
-                    
-                    return (
-                      <AccordionItem key={module.id} value={module.id} className="border-b border-border last:border-0">
-                        <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30">
-                          <div className="flex items-center gap-2 text-left">
-                            {moduleCompleted ? (
-                              <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                            ) : (
-                              <div className="w-4 h-4 rounded-full border-2 border-muted-foreground flex-shrink-0" />
-                            )}
-                            <div>
-                              <p className="font-medium text-sm">{module.title}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {moduleLessonsCompleted}/{module.lessons.length} lessons
-                              </p>
+                {modules.length === 0 ? (
+                  <div className="p-4 text-sm text-muted-foreground text-center">
+                    No modules yet
+                  </div>
+                ) : (
+                  <Accordion type="multiple" defaultValue={[modules[0]?.id]} className="w-full">
+                    {modules.map((module) => {
+                      const moduleLessons = getLessonsForModule(module.id);
+                      const moduleCompleted = moduleLessons.length > 0 && moduleLessons.every(l => completedLessons.has(l.id));
+                      const moduleLessonsCompleted = moduleLessons.filter(l => completedLessons.has(l.id)).length;
+
+                      return (
+                        <AccordionItem key={module.id} value={module.id} className="border-b border-border last:border-0">
+                          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30">
+                            <div className="flex items-center gap-2 text-left">
+                              {moduleCompleted ? (
+                                <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                              ) : (
+                                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground flex-shrink-0" />
+                              )}
+                              <div>
+                                <p className="font-medium text-sm">{module.title}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {moduleLessonsCompleted}/{moduleLessons.length} lessons
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="pb-0">
-                          {module.lessons.map((lesson) => {
-                            const isCompleted = completedLessons.has(lesson.id);
-                            const isActive = currentLesson?.id === lesson.id;
-                            
-                            return (
-                              <button
-                                key={lesson.id}
-                                onClick={() => handleLessonClick(lesson)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors ${
-                                  isActive ? "bg-primary/10" : ""
-                                }`}
-                              >
-                                {isCompleted ? (
-                                  <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
-                                ) : isActive ? (
-                                  <PlayCircle className="w-4 h-4 text-primary flex-shrink-0" />
-                                ) : (
-                                  <div className="w-4 h-4 rounded-full border border-muted-foreground flex-shrink-0" />
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <p className={`text-sm truncate ${isActive ? "font-medium text-primary" : ""}`}>
-                                    {lesson.title}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">{lesson.duration}</p>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </AccordionContent>
-                      </AccordionItem>
-                    );
-                  })}
-                </Accordion>
+                          </AccordionTrigger>
+                          <AccordionContent className="pb-0">
+                            {moduleLessons.map((lesson) => {
+                              const isCompleted = completedLessons.has(lesson.id);
+                              const isActive = currentLesson?.id === lesson.id;
+
+                              return (
+                                <button
+                                  key={lesson.id}
+                                  onClick={() => handleLessonClick(lesson)}
+                                  className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors ${
+                                    isActive ? "bg-primary/10" : ""
+                                  }`}
+                                >
+                                  {isCompleted ? (
+                                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                  ) : isActive ? (
+                                    <PlayCircle className="w-4 h-4 text-primary flex-shrink-0" />
+                                  ) : (
+                                    <div className="w-4 h-4 rounded-full border border-muted-foreground flex-shrink-0" />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className={`text-sm truncate ${isActive ? "font-medium text-primary" : ""}`}>
+                                      {lesson.title}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">{lesson.duration}</p>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
+                  </Accordion>
+                )}
               </Card>
             </div>
           </div>
