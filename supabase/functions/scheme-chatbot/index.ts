@@ -87,6 +87,31 @@ serve(async (req) => {
     }
 
     const { messages } = await req.json();
+
+    // Validate messages array
+    if (!Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: 'Invalid messages format' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (messages.length > 50) {
+      return new Response(JSON.stringify({ error: 'Too many messages. Maximum 50 allowed.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    for (const msg of messages) {
+      if (!msg.content || typeof msg.content !== 'string') {
+        return new Response(JSON.stringify({ error: 'Invalid message format' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (msg.content.length > 10000) {
+        return new Response(JSON.stringify({ error: 'Message content too long. Maximum 10,000 characters.' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {

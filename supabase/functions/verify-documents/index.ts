@@ -35,9 +35,34 @@ serve(async (req) => {
     }
 
     const { documents, schemeName, schemeRequirements, uploadedFiles } = await req.json();
+
+    // Validate inputs
+    if (documents && (!Array.isArray(documents) || documents.length > 20)) {
+      return new Response(JSON.stringify({ error: 'Invalid documents. Maximum 20 allowed.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (uploadedFiles && (!Array.isArray(uploadedFiles) || uploadedFiles.length > 10)) {
+      return new Response(JSON.stringify({ error: 'Too many files. Maximum 10 allowed.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (uploadedFiles) {
+      for (const file of uploadedFiles) {
+        if (file.base64 && file.base64.length > 7 * 1024 * 1024) {
+          return new Response(JSON.stringify({ error: 'File too large. Maximum 5MB per file.' }), {
+            status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+    }
+    if (!schemeName || typeof schemeName !== 'string' || schemeName.length > 200) {
+      return new Response(JSON.stringify({ error: 'Invalid scheme name.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     console.log('Verifying documents for scheme:', schemeName);
-    console.log('Documents submitted:', documents);
     console.log('Uploaded files count:', uploadedFiles?.length || 0);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
