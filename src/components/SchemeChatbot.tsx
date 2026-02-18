@@ -76,11 +76,17 @@ export function SchemeChatbot() {
   };
 
   const streamChat = async (userMessages: Message[], convId: string | null) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const authToken = session?.access_token;
+    if (!authToken) {
+      throw new Error("You must be logged in to use the chatbot.");
+    }
+
     const resp = await fetch(CHAT_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({ messages: userMessages }),
     });
