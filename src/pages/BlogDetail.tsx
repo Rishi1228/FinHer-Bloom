@@ -9,6 +9,106 @@ import { useState } from "react";
 import { useBlogBySlug, useBlogComments } from "@/hooks/useBlogs";
 import { format } from "date-fns";
 
+const renderInlineFormatting = (text: string) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+};
+
+const renderMarkdownContent = (content: string) => {
+  const lines = content.split("\n");
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Detect markdown table
+    if (line.trim().startsWith("|") && i + 1 < lines.length && lines[i + 1].trim().match(/^\|[\s-:|]+\|$/)) {
+      const tableLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      // Parse header
+      const headerCells = tableLines[0].split("|").filter(c => c.trim() !== "").map(c => c.trim());
+      // Skip separator (index 1), parse body rows
+      const bodyRows = tableLines.slice(2).map(row =>
+        row.split("|").filter(c => c.trim() !== "").map(c => c.trim())
+      );
+
+      elements.push(
+        <div key={`table-${i}`} className="overflow-x-auto my-6">
+          <table className="w-full border-collapse rounded-lg overflow-hidden text-sm">
+            <thead>
+              <tr className="bg-primary/10">
+                {headerCells.map((cell, ci) => (
+                  <th key={ci} className="text-left px-4 py-3 font-semibold text-foreground border-b border-border">
+                    {renderInlineFormatting(cell)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {bodyRows.map((row, ri) => (
+                <tr key={ri} className={ri % 2 === 0 ? "bg-muted/30" : "bg-background"}>
+                  {row.map((cell, ci) => (
+                    <td key={ci} className="px-4 py-3 text-foreground border-b border-border/50">
+                      {renderInlineFormatting(cell)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    if (line.startsWith("## ")) {
+      elements.push(
+        <h2 key={i} className="font-serif text-2xl font-bold mt-8 mb-4 text-foreground">
+          {line.replace("## ", "")}
+        </h2>
+      );
+    } else if (line.startsWith("### ")) {
+      elements.push(
+        <h3 key={i} className="font-serif text-xl font-semibold mt-6 mb-3 text-foreground">
+          {line.replace("### ", "")}
+        </h3>
+      );
+    } else if (line.startsWith("- ")) {
+      elements.push(
+        <li key={i} className="text-foreground ml-4 mb-2">
+          {renderInlineFormatting(line.replace("- ", ""))}
+        </li>
+      );
+    } else if (line.match(/^\d+\./)) {
+      elements.push(
+        <li key={i} className="text-foreground ml-4 mb-2 list-decimal">
+          {renderInlineFormatting(line.replace(/^\d+\.\s/, ""))}
+        </li>
+      );
+    } else if (line.trim() === "") {
+      elements.push(<br key={i} />);
+    } else {
+      elements.push(
+        <p key={i} className="text-foreground mb-4 leading-relaxed">
+          {renderInlineFormatting(line)}
+        </p>
+      );
+    }
+    i++;
+  }
+
+  return elements;
+};
+
 const BlogDetail = () => {
   const { blogId } = useParams();
   const [newComment, setNewComment] = useState("");
@@ -162,51 +262,7 @@ const BlogDetail = () => {
             className="glass-card p-6 md:p-8 mb-8"
           >
             <div className="prose prose-lg max-w-none">
-              {blog.content.split("\n").map((paragraph, index) => {
-                if (paragraph.startsWith("## ")) {
-                  return (
-                    <h2 key={index} className="font-serif text-2xl font-bold mt-8 mb-4 text-foreground">
-                      {paragraph.replace("## ", "")}
-                    </h2>
-                  );
-                }
-                if (paragraph.startsWith("### ")) {
-                  return (
-                    <h3 key={index} className="font-serif text-xl font-semibold mt-6 mb-3 text-foreground">
-                      {paragraph.replace("### ", "")}
-                    </h3>
-                  );
-                }
-                if (paragraph.startsWith("- ")) {
-                  return (
-                    <li key={index} className="text-foreground ml-4 mb-2">
-                      {paragraph.replace("- ", "")}
-                    </li>
-                  );
-                }
-                if (paragraph.match(/^\d+\./)) {
-                  return (
-                    <li key={index} className="text-foreground ml-4 mb-2 list-decimal">
-                      {paragraph.replace(/^\d+\.\s/, "")}
-                    </li>
-                  );
-                }
-                if (paragraph.startsWith("**") && paragraph.endsWith("**")) {
-                  return (
-                    <p key={index} className="font-semibold text-foreground mb-4">
-                      {paragraph.replace(/\*\*/g, "")}
-                    </p>
-                  );
-                }
-                if (paragraph.trim() === "") {
-                  return <br key={index} />;
-                }
-                return (
-                  <p key={index} className="text-foreground mb-4 leading-relaxed">
-                    {paragraph}
-                  </p>
-                );
-              })}
+              {renderMarkdownContent(blog.content)}
             </div>
           </motion.div>
 
