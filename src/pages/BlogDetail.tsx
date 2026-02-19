@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
-import { useBlogById, useBlogComments } from "@/hooks/useBlogs";
+import { useBlogBySlug, useBlogComments } from "@/hooks/useBlogs";
 import { format } from "date-fns";
 
 const BlogDetail = () => {
@@ -15,8 +15,8 @@ const BlogDetail = () => {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
-  const { data: blog, isLoading } = useBlogById(blogId);
-  const { data: dbComments = [] } = useBlogComments(blogId);
+  const { data: blog, isLoading } = useBlogBySlug(blogId);
+  const { data: dbComments = [] } = useBlogComments(blog?.id);
 
   const [localComments, setLocalComments] = useState<Array<{
     id: string; author: string; avatar: string; content: string; time: string; likes: number;
