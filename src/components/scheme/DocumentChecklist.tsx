@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { SchemeDetails } from "@/data/schemes";
+import type { SchemeDetails } from "@/hooks/useSchemes";
 
 interface DocumentChecklistProps {
   scheme: SchemeDetails;
