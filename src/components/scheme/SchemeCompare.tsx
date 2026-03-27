@@ -1,21 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, Scale, CheckCircle2, XCircle, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getAllSchemes, type SchemeDetails } from "@/data/schemes";
+import { useSchemes, convertToSchemeDetails, type SchemeDetails } from "@/hooks/useSchemes";
 
 interface SchemeCompareProps {
   initialSchemes?: string[];
 }
 
 const SchemeCompare = ({ initialSchemes = [] }: SchemeCompareProps) => {
-  const [selectedSchemes, setSelectedSchemes] = useState<SchemeDetails[]>(
-    initialSchemes.map(id => getAllSchemes().find(s => s.id === id)).filter(Boolean) as SchemeDetails[]
-  );
+  const { data: schemesFromDB = [] } = useSchemes();
+  const allSchemes = schemesFromDB.map(convertToSchemeDetails);
+  
+  const [selectedSchemes, setSelectedSchemes] = useState<SchemeDetails[]>([]);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-  const allSchemes = getAllSchemes();
+
+  useEffect(() => {
+    if (initialSchemes.length > 0 && allSchemes.length > 0) {
+      const initial = initialSchemes
+        .map(id => allSchemes.find(s => s.id === id))
+        .filter(Boolean) as SchemeDetails[];
+      setSelectedSchemes(initial);
+    }
+  }, [initialSchemes, allSchemes.length]);
 
   const addScheme = (scheme: SchemeDetails) => {
     if (selectedSchemes.length < 3 && !selectedSchemes.find(s => s.id === scheme.id)) {

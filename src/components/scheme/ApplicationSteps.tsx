@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, Circle, Clock, ArrowRight, MapPin, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { SchemeDetails } from "@/data/schemes";
+import type { SchemeDetails } from "@/hooks/useSchemes";
 
 interface ApplicationStepsProps {
   scheme: SchemeDetails;

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { SchemeDetails } from "@/data/schemes";
+import type { SchemeDetails } from "@/hooks/useSchemes";
 
 interface EarningsCalculatorProps {
   scheme: SchemeDetails;
