@@ -1,12 +1,12 @@
-# Welcome to your Fin-Her project
+# Welcome to Fin-Her 
 
 ## Project info
 
-**Fin-Her** is a web-based platform designed to simplify access to financial schemes for women. It provides updated information on eligibility, required documents, and verification to reduce confusion and repeated visits for corrections. The platform aims to empower women by making financial support systems more transparent and accessible.
+**FinHer** is an AI-powered platform designed to bridge the gap between women and government financial schemes in India. It simplifies scheme discovery, eligibility evaluation, and document readiness through a unified digital interface. By combining a rule-based eligibility engine with a domain-constrained AI assistant, it delivers accurate, explainable, and personalized guidance. The platform significantly reduces the time and complexity involved in accessing financial opportunities.
 
-<img width="1365" height="597" alt="image" src="https://github.com/user-attachments/assets/05bcfdb1-0b6b-49ca-a385-6e4620fbd4ae" />
+<img width="1349" height="586" alt="{174FF1A6-F0AE-4577-9F6B-64FF1A2E12D0}" src="https://github.com/user-attachments/assets/8e1c6751-7d6b-4b6c-84e1-eb43b5568f99" />
 
-<img width="833" height="590" alt="image" src="https://github.com/user-attachments/assets/42c58ae3-b27e-4cb7-b604-bc59ccb7c92f" />
+<img width="1363" height="591" alt="{3B880C83-810F-49AA-A576-D3B44429A356}" src="https://github.com/user-attachments/assets/31a2e059-1274-48de-9026-44e5dba69587" />
 
 
 ## Key Features
