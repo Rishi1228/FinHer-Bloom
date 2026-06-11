@@ -12,7 +12,7 @@ const PageLayout = ({ title, subtitle, children }: PageLayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-12 max-w-5xl">
+      <main className="flex-1 container mx-auto px-4 pt-32 pb-12 max-w-5xl">
         <header className="mb-10 text-center">
           <h1 className="font-serif text-4xl md:text-5xl font-bold mb-3">{title}</h1>
           {subtitle && (
