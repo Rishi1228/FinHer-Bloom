@@ -15,6 +15,17 @@ import Blogs from "./pages/Blogs";
 import BlogDetail from "./pages/BlogDetail";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Calculator from "./pages/Calculator";
+import FAQs from "./pages/FAQs";
+import Glossary from "./pages/Glossary";
+import HelpCenter from "./pages/HelpCenter";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Careers from "./pages/Careers";
+import Partners from "./pages/Partners";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
 import NotFound from "./pages/NotFound";
 import { SchemeChatbot } from "./components/SchemeChatbot";
 
@@ -39,6 +50,17 @@ const App = () => (
             <Route path="/blogs/:blogId" element={<BlogDetail />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/calculator" element={<Calculator />} />
+            <Route path="/faqs" element={<FAQs />} />
+            <Route path="/glossary" element={<Glossary />} />
+            <Route path="/help" element={<HelpCenter />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/partners" element={<Partners />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/cookies" element={<Cookies />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
